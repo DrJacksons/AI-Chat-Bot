@@ -1,14 +1,16 @@
 import traceback
 import copy
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union, Iterator
+from typing import Dict, List, Union, Iterator, Optional
+from agent_core.tools.base import BaseTool
 
 
 class Agent(ABC):
     def __init__(self, 
-        name: str,
-        system_message: str,
-        description: float,
+        function_list: Optional[List[BaseTool]] = None,
+        name: Optional[str] = None,
+        system_message: Optional[str] = None,
+        description: Optional[str] = None,
         **kwargs):
         """
         Initialize the agent.
@@ -18,6 +20,12 @@ class Agent(ABC):
             system_message (str): The system message of the agent.
             description (float): The description of the agent.
         """
+        self.extra_generate_cfg: dict = {}
+
+        self.function_map = {}
+        if function_list:
+            for tool in function_list:
+                self._init_tool(tool)
         self.name = name
         self.system_message = system_message
         self.description = description
