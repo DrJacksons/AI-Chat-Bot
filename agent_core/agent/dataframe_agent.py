@@ -1,4 +1,6 @@
+from typing import List, Optional, Union
 from agent_core.agent.base import Agent
+from data_inteligence.dataframe import DataFrame, VirtualDataFrame
 
 
 class DataFrameAgent(Agent):

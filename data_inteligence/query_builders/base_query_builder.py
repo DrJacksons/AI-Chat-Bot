@@ -43,12 +43,12 @@ class BaseQueryBuilder:
 
         if self._check_distinct():
             query = query.distinct()
-        # Add GROUP BY if there are aggregations
+        # 如果有聚合(group_by)，则添加GROUP BY
         if self.schema.group_by:
             query = query.group_by(
                 *[normalize_identifiers(col) for col in self.schema.group_by]
             )
-        # Add LIMIT
+        # 添加LIMIT
         query = query.limit(n)
 
         return query.transform(quote_identifiers).sql(pretty=True)
@@ -76,7 +76,7 @@ class BaseQueryBuilder:
                 )
                 col.alias = col.alias or normalize_identifiers(col.name).sql()
 
-            # Add alias if specified 
+            # 如果指定，则添加别名 
             if col.alias:
                 column_expr = f"{column_expr} AS {normalize_identifiers(col.alias).sql()}"
             columns.append(column_expr)
@@ -98,5 +98,6 @@ class BaseQueryBuilder:
     
     @staticmethod
     def check_compatible_sources(sources: List[Source]) -> bool:
+        """检查多个Sources是否兼容"""
         base_source = sources[0]
         return all(base_source.is_compatible_source(source) for source in sources[1:])

@@ -5,11 +5,11 @@ from data_inteligence.constants import *
 
 
 class Column(BaseModel):
-    name: str = Field(..., description="Name of the column.")
-    type: Optional[str] = Field(None, description="Data type of the column.")
-    description: Optional[str] = Field(None, description="Description of the column")
+    name: str = Field(..., description="Column名")
+    type: Optional[str] = Field(None, description="Column类型")
+    description: Optional[str] = Field(None, description="Column描述")
     expression: Optional[str] = Field(
-        None, description="聚合表达式操作 (avg, min, max, sum)"
+        None, description="聚合表达式 (avg, min, max, sum)"
     )
     alias: Optional[str] = Field(None, description="Column的别名")
 
@@ -18,7 +18,7 @@ class Column(BaseModel):
     def is_column_type_supported(cls, type: str) -> str:
         if type and type not in VALID_COLUMN_TYPES:
             raise ValueError(
-                f"不支持的column类型: {type}. 支持的类型有: {VALID_COLUMN_TYPES}"
+                f"不支持的Column类型: {type}. 支持的类型有: {VALID_COLUMN_TYPES}"
             )
         return type
 

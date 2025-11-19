@@ -1,6 +1,5 @@
-import os
+from pathlib import Path
 
-from .. import ConfigManager
 from ..data_loader.semantic_layer_schema import SemanticLayerSchema
 from .base_query_builder import BaseQueryBuilder
 
@@ -11,17 +10,15 @@ class LocalQueryBuilder(BaseQueryBuilder):
         self.dataset_path = dataset_path
 
     def _get_table_expression(self) -> str:
-        filemanager = ConfigManager.get().file_manager
-        filepath = os.path.join(
-            self.dataset_path,
-            self.schema.source.path,
-        )
-        abspath = filemanager.abs_path(filepath)
+        filepath = Path(self.dataset_path) / self.schema.source.path
+        abspath = filepath.resolve()
         source_type = self.schema.source.type
 
         if source_type == "parquet":
             return f"read_parquet('{abspath}')"
         elif source_type == "csv":
             return f"read_csv('{abspath}')"
+        elif source_type == "xlsx" or source_type == "xls":
+            return f"read_excel('{abspath}')"
         else:
             raise ValueError(f"Unsupported file format: {source_type}")

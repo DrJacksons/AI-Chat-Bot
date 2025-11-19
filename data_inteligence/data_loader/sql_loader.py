@@ -1,6 +1,14 @@
-from data_inteligence.data_loader.loader import DatasetLoader
+import pandas as pd
+from typing import Optional, List
+
+from .loader import DatasetLoader
 from .semantic_layer_schema import SemanticLayerSchema
+from data_inteligence.exceptions import MaliciousQueryError
 from data_inteligence.dataframe.virtual_dataframe import VirtualDataFrame
+from data_inteligence.query_builders import SqlQueryBuilder
+from data_inteligence.query_builders.sql_parser import SQLParser
+from data_inteligence.helpers.sql_load import load_from_mysql, load_from_postgres, load_from_oracle
+from data_inteligence.helpers.sql_sanitizer import is_sql_query_safe
 
 
 class SQLDatasetLoader(DatasetLoader):
@@ -21,6 +29,37 @@ class SQLDatasetLoader(DatasetLoader):
             data_loader=self,
             path=self.dataset_path,
         )
+
+    def execute_query(self, query: str, params: Optional[list] = None) -> pd.DataFrame:
+        source_type = self.schema.source.type
+        connection_info = self.schema.source.connection
+
+        load_function = self._get_load_function(source_type)
+        query = SQLParser.transpile_sql_dialect(query, to_dialect=source_type)
+        
+        if not is_sql_query_safe(query, source_type):
+            raise MaliciousQueryError(
+                "The SQL query is deemed unsafe and will not be executed."
+            )
+        try:
+            if params:
+                query = query.replace(" % ", " %% ")
+            return load_function(connection_info, query, params)
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to execute query for '{source_type}' with: {query}"
+            ) from e
+
+    @staticmethod
+    def _get_load_function(source_type: str):
+        if source_type == 'mysql':
+            return load_from_mysql
+        elif source_type == 'postgres':
+            return load_from_postgres
+        elif source_type == 'oracle':
+            return load_from_oracle
+        else:
+            raise ValueError(f"Unsupported source type: {source_type}")
     
     def load_head(self) -> pd.DataFrame:
         query = self.query_builder.get_head_query()
