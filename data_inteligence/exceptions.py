@@ -1,0 +1,14 @@
+"""
+This module contains the implementation of Custom Exceptions.
+"""
+
+class InvalidDataSourceType(Exception):
+    """Raised error with invalid data source provided"""
+    pass
+
+class MaliciousQueryError(Exception):
+    """
+    Raise error if malicious query is generated
+    Args:
+        Exception (Exception): MaliciousQueryError
+    """
