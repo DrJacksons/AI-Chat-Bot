@@ -14,9 +14,7 @@ class AgentState:
     dfs: List[Union[DataFrame, VirtualDataFrame]] = field(default_factory=list)
     _config: Union[Config, dict] = field(default_factory=dict)
     memory: Memory = field(default_factory=Memory)
-    vectorstore: Optional[VectorStore] = None
     intermediate_values: Dict[str, Any] = field(default_factory=dict)
-    logger: Optional[Logger] = None
     last_code_generated: Optional[str] = None
     last_code_executed: Optional[str] = None
     last_prompt_id: str = None
