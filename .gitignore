@@ -3,3 +3,5 @@
 /.venv/
 /.git/
 __pycache__/
+alembic/
+alembic.ini

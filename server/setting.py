@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseSettings, PostgresDsn
+from pydantic.v1 import BaseSettings, PostgresDsn
 
 
 class EnvironmentType(str, Enum):
@@ -19,7 +19,7 @@ class Config(BaseConfig):
     DEFAULT_LOCALE: str = "en_US"
     ENVIRONMENT: str = EnvironmentType.DEVELOPMENT
     POSTGRES_URL: PostgresDsn = (
-        "postgresql+asyncpg://user:password@127.0.0.1:5432/db-name"
+        "postgresql+asyncpg://test:testqwer123@127.0.0.1:5432/chatbot"
     )
     OPENAI_API_KEY: str = None
     RELEASE_VERSION: str = "0.1.0"
@@ -28,7 +28,7 @@ class Config(BaseConfig):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60 * 24
     EMAIL = "test@pandabi.ai"
-    PASSWORD = "12345"
+    PASSWORD = "qwer@123"
     DEFAULT_ORGANIZATION = "PandaBI"
     DEFAULT_SPACE = "pandasai"
 
