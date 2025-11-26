@@ -1,6 +1,6 @@
-def main():
-    print("Hello from ai-chat-bot!")
+import uvicorn
+from server.core.server import app
 
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run(app, host="0.0.0.0", port=8000, workers=1)

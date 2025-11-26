@@ -4,19 +4,19 @@ from typing import List
 import pandas as pd
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware import Middleware
-from fastapi.middleware.cors import CORSMiddleware
+# from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# from api import router
+from server.api import api_router
 # from app.controllers.workspace import WorkspaceController
 # from app.controllers.user import UserController
 # from app.models import Dataset, Workspace, User
 # from app.repositories.dataset import DatasetRepository
 # from app.repositories.workspace import WorkspaceRepository
 # from app.repositories.user import UserRepository
-# from core.config import config
+from server.setting import config
 # from core.database.session import session
-# from core.exceptions import CustomException
+from server.core.exceptions import CustomException
 # from core.fastapi.dependencies import Logging
 # from core.fastapi.middlewares import (
 #     AuthBackend,
@@ -39,17 +39,17 @@ def on_auth_error(request: Request, exc: Exception):
     )
 
 
-# def init_routers(app_: FastAPI) -> None:
-#     app_.include_router(router)
+def init_routers(app_: FastAPI) -> None:
+    app_.include_router(api_router)
 
 
-# def init_listeners(app_: FastAPI) -> None:
-#     @app_.exception_handler(CustomException)
-#     async def custom_exception_handler(request: Request, exc: CustomException):
-#         return JSONResponse(
-#             status_code=exc.code,
-#             content={"error_code": exc.error_code, "message": exc.message},
-#         )
+def init_listeners(app_: FastAPI) -> None:
+    @app_.exception_handler(CustomException)
+    async def custom_exception_handler(request: Request, exc: CustomException):
+        return JSONResponse(
+            status_code=exc.code,
+            content={"error_code": exc.error_code, "message": exc.message},
+        )
 
 
 # def make_middleware() -> List[Middleware]:
@@ -62,7 +62,7 @@ def on_auth_error(request: Request, exc: Exception):
 #             allow_methods=["*"],
 #             allow_headers=["*"],
 #         ),
-#         # 认证中间件
+#         # 权限认证中间件
 #         Middleware(
 #             AuthenticationMiddleware,
 #             backend=AuthBackend(),
@@ -137,8 +137,8 @@ def create_app() -> FastAPI:
         # dependencies=[Depends(Logging)],
         # middleware=make_middleware(),
     )
-    # init_routers(app_=app_)
-    # init_listeners(app_=app_)
+    init_routers(app_=app_)
+    init_listeners(app_=app_)
 
     # @app_.on_event("startup")
     # async def on_startup():

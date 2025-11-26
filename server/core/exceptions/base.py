@@ -1,0 +1,10 @@
+from http import HTTPStatus
+
+
+class CustomException(Exception):
+    code = HTTPStatus.BAD_GATEWAY
+    error_code = HTTPStatus.BAD_GATEWAY
+    message = HTTPStatus.BAD_GATEWAY.description
+
+    def __init__(self, message: str = None):
+        self.message = message or self.message

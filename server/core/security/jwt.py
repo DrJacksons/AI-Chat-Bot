@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
-from core.config import config
-from core.exceptions import CustomException
+from server.setting import config
+from server.core.exceptions import CustomException
 
 
 class JWTDecodeError(CustomException):
