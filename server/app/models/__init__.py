@@ -48,42 +48,23 @@ class User(Base):
 
     datasets = relationship("Dataset", back_populates="user")
     connectors = relationship("Connector", back_populates="user")
-    memberships = relationship(
-        "OrganizationMembership", back_populates="user", lazy="selectin"
-    )
     spaces = relationship("Workspace", back_populates="user")
     user_spaces = relationship("UserSpace", back_populates="user")
     logs = relationship("Logs", back_populates="user")
     features = Column(JSON, nullable=True)
 
 
-class Organization(Base):
-    __tablename__ = "organization"
+class Department(Base):
+    __tablename__ = "department"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String, index=True)
     url = Column(String, nullable=True)
     is_default = Column(Boolean, default=False)
     settings = Column(JSON, nullable=True)
 
-    datasets = relationship("Dataset", back_populates="organization")
-    members = relationship(
-        "OrganizationMembership", back_populates="organization", lazy="selectin"
-    )
-    workspaces = relationship("Workspace", back_populates="organization")
-    roles = relationship("Role", back_populates="organization")
-
-
-class OrganizationMembership(Base):
-    __tablename__ = "organization_membership"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organization.id"))
-    # role = Column(String, default=OrganizationRole.MEMBER)
-    verified = Column(Boolean, default=True)
-
-    organization = relationship("Organization", back_populates="members", lazy="joined")
-    user = relationship("User", back_populates="memberships", lazy="joined")
-    roles = relationship("Role", secondary="membership_role", back_populates="memberships")
+    datasets = relationship("Dataset", back_populates="department")
+    workspaces = relationship("Workspace", back_populates="department")
+    roles = relationship("Role", back_populates="department")
 
 
 class Role(Base):
@@ -93,12 +74,12 @@ class Role(Base):
     description = Column(String, nullable=True)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organization.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.now)
+    department_id = Column(UUID(as_uuid=True), ForeignKey("department.id"), nullable=True)
 
-    organization = relationship("Organization", back_populates="roles")
+    department = relationship("Department", back_populates="roles")
     permissions = relationship("Permission", secondary="role_permission", back_populates="roles", lazy="selectin")
-    memberships = relationship("OrganizationMembership", secondary="membership_role", back_populates="roles")
 
-    __table_args__ = (UniqueConstraint("organization_id", "name", name="uq_role_org_name"),)
+    __table_args__ = (UniqueConstraint("department_id", "name", name="uq_role_department_name"),)
 
 
 class Permission(Base):

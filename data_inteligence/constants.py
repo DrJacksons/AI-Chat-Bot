@@ -4,7 +4,7 @@ Constants used in the data inteligence package.
 from pathlib import Path
 
 # 默认API url
-DEFAULT_API_URL = "https://api.pandabi.ai"
+DEFAULT_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 # 如果用户未提供任何图表，则存储图表的默认目录
 DEFAULT_CHART_DIRECTORY = Path("exports") / "charts"

@@ -9,7 +9,7 @@ from agent_core.llm.base import BaseChatModel
 @dataclass
 class AgentState:
     """
-    代理状态类，用于存储代理在运行过程中的状态信息。
+    Agent运行状态类，用于存储Agent在运行过程中的状态信息。
     """
     dfs: List[Union[DataFrame, VirtualDataFrame]] = field(default_factory=list)
     _config: Union[Config, dict] = field(default_factory=dict)

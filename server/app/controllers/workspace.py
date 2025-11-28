@@ -94,7 +94,7 @@ class WorkspaceController(BaseController[Workspace]):
         return {"message": "Workspace deleted successfully"}
 
 
-    async def add_workspace(self, workspace,  user):
+    async def add_workspace(self, workspace, user):
         await self.space_repository.create_workspace(workspace, user)
         return {"message": "Workspace successfully Added"}
     

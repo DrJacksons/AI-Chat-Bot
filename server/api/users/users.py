@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from server.app.controllers import AuthController
 from server.app.controllers.user import UserController
 from server.app.schemas.extras.token import Token
-# from server.app.schemas.requests.users import LoginUserRequest
+from server.app.schemas.requests.users import LoginUserRequest
 from server.app.schemas.responses.users import UserInfo
 from server.core.factory import Factory
 from server.core.fastapi.dependencies.current_user import get_current_user

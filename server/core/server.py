@@ -77,8 +77,7 @@ async def init_user():
     space_repository = WorkspaceRepository(Workspace, db_session=session)
     controller = UserController(user_repository, space_repository)
     await controller.create_default_user()
-    # , join_={"memberships"}
-    users = await controller.get_all(limit=1)
+    users = await controller.get_all(limit=1, join_={"memberships"})
     return users[0]
 
 

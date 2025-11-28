@@ -11,3 +11,6 @@
 其中本地数据集为表格类型的文件，支持parquet、csv格式、excel格式等
 数据库数据集支持主流关系型数据库：Oracle、MySQL、PostgreSQL、SQL Server等
 
+# Data Loader加载器
+本地数据集统一使用duckdb来查询，duckdb具有对大数据量表的高性能的处理效率。
+

@@ -14,13 +14,6 @@ class UserResponse(BaseModel):
         orm_mode = True
 
 
-class MembershipBase(BaseModel):
-    organization: OrganizationBase
-
-    class Config:
-        orm_mode = True
-
-
 class UserInfo(BaseModel):
     email: str = Field(..., example="john.doe@example.com")
     first_name: str = Field(..., example="john.doe")
