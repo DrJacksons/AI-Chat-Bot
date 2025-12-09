@@ -1,11 +1,11 @@
 from typing import Any, Dict, List
 
 from sqlalchemy import and_, asc, desc, func
-from app.models import ConversationMessage, UserConversation
-from core.repository import BaseRepository
+from server.app.models import ConversationMessage, UserConversation
+from server.core.repository import BaseRepository
 from sqlalchemy.sql.expression import select
 from sqlalchemy.orm import selectinload
-from core.database.transactional import Propagation, Transactional
+from server.core.database.transactional import Propagation, Transactional
 
 
 class ConversationRepository(BaseRepository[UserConversation]):

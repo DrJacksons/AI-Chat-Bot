@@ -11,13 +11,12 @@ class LogsRepository(BaseRepository[Logs]):
     
     @Transactional(propagation=Propagation.REQUIRED)
     async def add_log(
-        self, user_id: str, api_key: str, json_log: str, query: str, 
+        self, user_id: str, json_log: str, query: str, 
         success: bool = True, execution_time: float = 0.0,
         exhausted_tokens: int = 0
     ):  
         new_log = Logs(
             user_id=user_id,
-            api_key=api_key,
             json_log=json_log,
             query=query,
             success=success,

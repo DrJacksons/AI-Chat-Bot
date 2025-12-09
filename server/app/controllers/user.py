@@ -1,6 +1,8 @@
 from server.app.models import User
 from server.app.repositories import UserRepository, WorkspaceRepository
-from server.app.schemas.responses.users import UserInfo, OrganizationBase, SpaceBase
+from server.app.schemas.responses.users import UserInfo
+from server.app.schemas.responses.space import SpaceBase
+from server.app.schemas.responses.department import DepartmentBase
 from server.core.controller import BaseController
 from server.core.database.transactional import Propagation, Transactional
 from server.core.exceptions.base import NotFoundException
@@ -16,7 +18,7 @@ class UserController(BaseController[User]):
 
     @Transactional(propagation=Propagation.REQUIRED_NEW)
     async def create_default_user(self) -> User:
-        users = await self.get_all(limit=1, join_={"memberships"})
+        users = await self.get_all(limit=1)
         if not users:
             await self.user_repository.create_and_init_dummy_user()
 
@@ -32,27 +34,44 @@ class UserController(BaseController[User]):
 
         user = users[0]
 
-        organizations = [
-            OrganizationBase(
-                id=membership.organization.id, name=membership.organization.name
-            )
-            for membership in user.memberships
-        ]
+        user_workspaces = await self.space_repository.get_user_workspaces(user)
+        space = user_workspaces[0] if user_workspaces else None
+        if space is None:
+            spaces = await self.space_repository.get_all(limit=1)
+            if not spaces:
+                raise NotFoundException("No workspace found for the user")
+            space = spaces[0]
 
-        space = await self.space_repository.get_by(
-            "organization_id", organizations[0].id
+        space_base = SpaceBase(id=space.id, name=space.name)
+
+        department = (
+            user.departments[0] if getattr(user, "departments", None) else None
         )
-        space = space[0]
+        if department is None:
+            raise NotFoundException("No department found for the user")
+        department_base = DepartmentBase(
+            id=department.id, name=department.name, description=department.description
+        )
 
-        space_base = SpaceBase(id=space.id, name=space.name, slug=space.slug)
+        roles = [role.name for role in getattr(user, "roles", [])]
+        permissions = []
+        if getattr(user, "roles", None):
+            seen = set()
+            for role in user.roles:
+                for p in getattr(role, "permissions", []):
+                    if p.code not in seen:
+                        seen.add(p.code)
+                        permissions.append(p.code)
 
         return UserInfo(
             email=user.email,
-            first_name=user.first_name,
+            nick_name=user.nick_name,
             id=user.id,
-            organizations=organizations,
+            department=department_base,
             space=space_base,
-            features=user.features
+            roles=roles,
+            permissions=permissions,
+            features=user.features,
         )
     
     @Transactional(propagation=Propagation.REQUIRED_NEW)
@@ -65,5 +84,3 @@ class UserController(BaseController[User]):
 
         user.features = features
         return user.features
-
-    

@@ -95,7 +95,6 @@ class DatasetController(BaseController[Dataset]):
 
         dataset = await self.dataset_repository.create_dataset(
             user_id=user.id,
-            organization_id=user.organizations[0].id,
             name=name,
             description=description,
             connector_type=ConnectorType.CSV,

@@ -12,7 +12,6 @@ class DatasetRepository(BaseRepository[Dataset]):
     async def create_dataset(
         self,
         user_id: str,
-        organization_id: str,
         name: str,
         connector_type: ConnectorType,
         config,
@@ -28,7 +27,6 @@ class DatasetRepository(BaseRepository[Dataset]):
             table_name=name,
             head=head,
             user_id=user_id,
-            organization_id=organization_id,
             connector_id=connector.id,
             description=description
         )

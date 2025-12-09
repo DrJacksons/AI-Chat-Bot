@@ -24,6 +24,7 @@ class UserConversationBase(BaseModel):
     id: UUID4
     workspace_id: UUID4
     user_id: UUID4
+    type_id: int
     created_at: datetime
     valid: bool
     messages: List[ConversationMessageBase]

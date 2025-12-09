@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Union
+from agent_core.llm.schema import ContentItem
 
 
 class BaseTool(ABC):

@@ -15,14 +15,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.associationproxy import association_proxy
 
 from server.core.database import Base
-
-
-class OrganizationRole:
-    MEMBER = "MEMBER"
-    ADMIN = "ADMIN"
-    OWNER = "OWNER"
 
 
 class DataframeLoadStatus(Enum):
@@ -40,31 +35,39 @@ class User(Base):
     __tablename__ = "user"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String(255), index=True, unique=True)
-    first_name = Column(String(255), nullable=True)
+    nick_name = Column(String(255), nullable=True)
+    full_name = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.now)
     password = Column(String(255))
     verified = Column(Boolean, default=False)
-    last_name = Column(String(255), nullable=True)
 
     datasets = relationship("Dataset", back_populates="user")
     connectors = relationship("Connector", back_populates="user")
+    departments = relationship("Department", back_populates="user")
     spaces = relationship("Workspace", back_populates="user")
     user_spaces = relationship("UserSpace", back_populates="user")
     logs = relationship("Logs", back_populates="user")
     features = Column(JSON, nullable=True)
+    # 复用中间表user_role，多对多
+    roles = relationship(
+        "Role",
+        secondary="user_role",
+        back_populates="users",
+        lazy="selectin",
+    )
+    # 关联角色的所有权限（聚合自角色权限）
+    permissions = association_proxy("roles", "permissions")
 
 
 class Department(Base):
     __tablename__ = "department"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String, index=True)
-    url = Column(String, nullable=True)
-    is_default = Column(Boolean, default=False)
+    description = Column(String, nullable=True)
     settings = Column(JSON, nullable=True)
 
-    datasets = relationship("Dataset", back_populates="department")
+    users = relationship("User", back_populates="departments")
     workspaces = relationship("Workspace", back_populates="department")
-    roles = relationship("Role", back_populates="department")
 
 
 class Role(Base):
@@ -72,14 +75,15 @@ class Role(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255))
     description = Column(String, nullable=True)
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organization.id"), nullable=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=True)
+    is_system_role = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.datetime.now)
-    department_id = Column(UUID(as_uuid=True), ForeignKey("department.id"), nullable=True)
 
-    department = relationship("Department", back_populates="roles")
+    workspace = relationship("Workspace", back_populates="roles")
     permissions = relationship("Permission", secondary="role_permission", back_populates="roles", lazy="selectin")
+    users = relationship("User", secondary="user_role", back_populates="roles")
 
-    __table_args__ = (UniqueConstraint("department_id", "name", name="uq_role_department_name"),)
+    __table_args__ = (UniqueConstraint("workspace_id", "name", name="uq_role_workspace_name"),)
 
 
 class Permission(Base):
@@ -102,10 +106,11 @@ class RolePermission(Base):
     permission_id = Column(UUID(as_uuid=True), ForeignKey("permission.id"), primary_key=True)
 
 
-class MembershipRole(Base):
-    __tablename__ = "membership_role"
-    membership_id = Column(UUID(as_uuid=True), ForeignKey("organization_membership.id"), primary_key=True)
+class UserRole(Base):
+    __tablename__ = "user_role"
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), primary_key=True)
     role_id = Column(UUID(as_uuid=True), ForeignKey("role.id"), primary_key=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspace.id"), primary_key=True)
 
 
 class Dataset(Base):
@@ -117,13 +122,11 @@ class Dataset(Base):
     created_at = Column(DateTime, default=datetime.datetime.now)
     head = Column(JSON, nullable=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organization.id"))
     connector_id = Column(UUID(as_uuid=True), ForeignKey("connector.id"))
     field_descriptions = Column(JSON, nullable=True)
     filterable_columns = Column(JSON, nullable=True)
 
     user = relationship("User", back_populates="datasets")
-    organization = relationship("Organization", back_populates="datasets")
     connector = relationship("Connector", back_populates="datasets", lazy="joined")
     dataset_spaces = relationship("DatasetSpace", back_populates="dataset")
 
@@ -146,15 +149,16 @@ class Workspace(Base):
     __tablename__ = "workspace"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String)
+    description = Column(String, nullable=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organization.id"))
-    slug = Column(String, nullable=True)
+    department_id = Column(UUID(as_uuid=True), ForeignKey("department.id"))
     created_at = Column(DateTime, default=datetime.datetime.now)
 
-    organization = relationship("Organization", back_populates="workspaces")
+    department = relationship("Department", back_populates="workspaces")
     user = relationship("User", back_populates="spaces")
     dataset_spaces = relationship("DatasetSpace", back_populates="workspace")
     user_spaces = relationship("UserSpace", back_populates="workspace")
+    roles = relationship("Role", back_populates="workspace")
 
 
 class UserSpace(Base):

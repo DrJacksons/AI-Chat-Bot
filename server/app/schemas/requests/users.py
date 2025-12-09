@@ -1,5 +1,3 @@
-# pylint: disable=all
-
 import re
 
 from pydantic import BaseModel, EmailStr, constr, field_validator

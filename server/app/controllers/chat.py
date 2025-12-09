@@ -3,27 +3,26 @@ import shutil
 from typing import List
 
 import pandas as pd
-from pandasai import Agent
-from pandasai.connectors.pandas import PandasConnector
-from pandasai.helpers.path import find_project_root
-from pandasai.llm.openai import OpenAI
+from agent_core.agent.dataframe_agent import DataFrameAgent
+from data_inteligence.helpers.path import find_project_root
+from agent_core.llm.oai import OpenAIChatModel
 
-from app.models import Dataset, User
-from app.repositories import UserRepository
-from app.repositories.conversation import ConversationRepository
-from app.repositories.workspace import WorkspaceRepository
-from ee.app.repositories.logs import LogsRepository
-from app.schemas.requests.chat import ChatRequest
-from app.schemas.responses.chat import ChatResponse
-from app.schemas.responses.users import UserInfo
-from app.utils.memory import prepare_conv_memory
-from core.constants import CHAT_FALLBACK_MESSAGE
-from core.controller import BaseController
-from core.database.transactional import Propagation, Transactional
-from core.utils.dataframe import load_df
-from core.utils.json_encoder import jsonable_encoder
-from core.utils.response_parser import JsonResponseParser
-from core.config import config as env_config
+from server.app.models import Dataset, User
+from server.app.repositories import UserRepository
+from server.app.repositories.conversation import ConversationRepository
+from server.app.repositories.workspace import WorkspaceRepository
+from server.app.repositories.logs import LogsRepository
+from server.app.schemas.requests.chat import ChatRequest
+from server.app.schemas.responses.chat import ChatResponse
+from server.app.schemas.responses.users import UserInfo
+from server.app.utils.memory import prepare_conv_memory
+from server.core.constants import CHAT_FALLBACK_MESSAGE
+from server.core.controller import BaseController
+from server.core.database.transactional import Propagation, Transactional
+from server.core.utils.dataframe import load_df
+from server.core.utils.json_encoder import jsonable_encoder
+from server.core.utils.response_parser import JsonResponseParser
+from server.core.config import config as env_config
 
 
 class ChatController(BaseController[User]):
