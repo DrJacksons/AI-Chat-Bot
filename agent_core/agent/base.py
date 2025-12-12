@@ -13,7 +13,7 @@ class Agent(ABC):
         description: Optional[str] = None,
         **kwargs):
         """
-        Initialize the agent.
+        Agent基类，定义了所有Agent的通用接口。
 
         Args:
             name (str): The name of the agent.
