@@ -1,7 +1,7 @@
 from typing import List
 
-from pandasai.helpers.memory import Memory
-from app.models import ConversationMessage
+from agent_core.helpers.memory import Memory
+from server.app.models import ConversationMessage
 
 
 def prepare_conv_memory(messages: List[ConversationMessage]) -> Memory:

@@ -77,7 +77,7 @@ async def init_user():
     space_repository = WorkspaceRepository(Workspace, db_session=session)
     controller = UserController(user_repository, space_repository)
     await controller.create_default_user()
-    users = await controller.get_all(limit=1, join_={"memberships"})
+    users = await controller.get_all(limit=1, join_={"departments"})
     return users[0]
 
 
@@ -124,16 +124,14 @@ async def init_database():
     datasets = read_csv_files_from_directory(directory_path)
     space_repository = WorkspaceRepository(Workspace, db_session=session)
 
-    space = await space_repository.create_default_space_in_org(
-        organization_id=user.memberships[0].organization_id, user_id=user.id
-    )
+    space = await space_repository.get_user_workspaces(user)
     dataset_repository = DatasetRepository(Dataset, db_session=session)
     space_controller = WorkspaceController(
         space_repository=space_repository, dataset_repository=dataset_repository
     )
 
-    await space_controller.reset_space_datasets(space.id)
-    await space_controller.add_csv_datasets(datasets, user, space.id)
+    await space_controller.reset_space_datasets(space[0].id)
+    await space_controller.add_csv_datasets(datasets, user, space[0].id)
 
 
 def create_app() -> FastAPI:

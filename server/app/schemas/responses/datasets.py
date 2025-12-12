@@ -11,7 +11,6 @@ class DatasetModel(BaseModel):
     created_at: datetime
     head: Optional[dict]
     user_id: UUID4
-    organization_id: UUID4
     connector_id: UUID4
     field_descriptions: Optional[dict]
     filterable_columns: Optional[dict]

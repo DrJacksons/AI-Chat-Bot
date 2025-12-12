@@ -15,8 +15,8 @@ class WorkspaceRepository(BaseRepository[Workspace]):
     Space repository provides all the database operations for the Space model.
     """
 
-    async def create_default_space_in_org(
-        self, organization_id: str, user_id: str
+    async def create_default_space_in_department(
+        self, department_id: str, user_id: str
     ) -> Workspace:
         space = await self.get_all(limit=1)
         if space:
@@ -24,9 +24,9 @@ class WorkspaceRepository(BaseRepository[Workspace]):
 
         space = Workspace(
             name=config.DEFAULT_SPACE,
+            description="默认工作空间（admin）",
             user_id=user_id,
-            organization_id=organization_id,
-            slug=config.DEFAULT_SPACE,
+            department_id=department_id
         )
         self.session.add(space)
         await self.session.flush()
@@ -101,8 +101,8 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         result = await self.session.execute(
             select(
                 User.id,
-                User.first_name,
-                User.last_name,
+                User.nick_name,
+                User.full_name,
                 User.email
             ).join(UserSpace).filter(UserSpace.workspace_id == workspace_id)
         )
@@ -127,8 +127,6 @@ class WorkspaceRepository(BaseRepository[Workspace]):
             select(Workspace).filter(Workspace.user_id == user.id)
         )
         user_spaces = space_result.scalars().all()
-
-
         return user_spaces
     
 
@@ -147,7 +145,6 @@ class WorkspaceRepository(BaseRepository[Workspace]):
             raise HTTPException(status_code=404, detail="Workspace not found")
         return workspace
     
-
     
     async def delete_workspace(self, workspace_id: str):
        async with self.session.begin():
@@ -174,13 +171,12 @@ class WorkspaceRepository(BaseRepository[Workspace]):
             await self.session.commit()
 
 
-
     @Transactional(propagation=Propagation.REQUIRED_NEW)
     async def create_workspace(self, workspace_data, user):
         new_workspace = Workspace(
             name=workspace_data.name,
             user_id=user.id,
-            organization_id=user.organizations[0].id,
+            department_id=user.departments[0].id,
         )
         self.session.add(new_workspace)
         await self.session.flush()

@@ -3,6 +3,7 @@ import copy
 from abc import ABC, abstractmethod
 from typing import Dict, List, Union, Iterator, Optional
 from agent_core.tools.base import BaseTool
+from agent_core.llm.schema import Message
 
 
 class Agent(ABC):

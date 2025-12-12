@@ -2,10 +2,12 @@ from sqlalchemy import Select, select
 from sqlalchemy.orm import joinedload
 
 from server.app.models import (
-    Organization,
+    Department,
+    Workspace,
     Role,
     Permission,
     RolePermission,
+    UserRole,
     User,
 )
 from server.setting import config
@@ -40,67 +42,95 @@ class UserRepository(BaseRepository[User]):
         return
 
     async def create_and_init_dummy_user(self) -> User:
-        # Create user
         password = PasswordHandler.hash(config.PASSWORD)
         user = User(
             email=config.EMAIL,
             password=password,
-            first_name="pandasai",
+            nick_name="admin",
+            full_name="admin",
             verified=True,
-            features={}
+            features={},
         )
         self.session.add(user)
 
-        # Create organization
-        organization = Organization(name="PandasAI", url="", is_default=True)
-        self.session.add(organization)
+        department = Department(
+            name="System",
+            description="系统默认部门",
+            settings={},
+        )
+        self.session.add(department)
 
-        # Flush to ensure IDs are populated
         await self.session.flush()
 
-        # # Ensure ADMIN role within organization
-        # res_role = await self.session.execute(
-        #     select(Role).filter(
-        #         Role.organization_id == organization.id, Role.name == "ADMIN"
-        #     )
-        # )
-        # admin_role = res_role.scalar_one_or_none()
-        # if admin_role is None:
-        #     admin_role = Role(
-        #         name="ADMIN",
-        #         description="Organization admin role",
-        #         organization_id=organization.id,
-        #     )
-        #     self.session.add(admin_role)
+        workspace = Workspace(
+            name=config.DEFAULT_SPACE,
+            description="默认工作空间（admin）",
+            user_id=user.id,
+            department_id=department.id,
+        )
+        self.session.add(workspace)
 
-        # # Ensure admin permission and bind to role
-        # res_perm = await self.session.execute(
-        #     select(Permission).filter(Permission.code == "admin.all")
-        # )
-        # admin_all_permission = res_perm.scalar_one_or_none()
-        # if admin_all_permission is None:
-        #     admin_all_permission = Permission(
-        #         code="admin.all",
-        #         resource="*",
-        #         action="*",
-        #         description="Grant all permissions within the organization",
-        #     )
-        #     self.session.add(admin_all_permission)
+        # Ensure admin permission exists
+        res_perm = await self.session.execute(
+            select(Permission).where(Permission.code == "admin.all")
+        )
+        admin_perm = res_perm.scalars().first()
+        if admin_perm is None:
+            admin_perm = Permission(
+                code="admin.all",
+                resource="*",
+                action="*",
+                description="系统管理员权限：允许所有操作",
+            )
+            self.session.add(admin_perm)
 
-        # res_rp = await self.session.execute(
-        #     select(RolePermission).filter(
-        #         RolePermission.role_id == admin_role.id,
-        #         RolePermission.permission_id == admin_all_permission.id,
-        #     )
-        # )
-        # res_rp.scalar_one_or_none()
-        # # if res_rp.scalar_one_or_none() is None:
-        # #     admin_role.permissions.append(admin_all_permission)
+        await self.session.flush()
 
+        # Create ADMIN role in the workspace if missing
+        res_role = await self.session.execute(
+            select(Role).where(
+                Role.workspace_id == workspace.id, Role.name == "ADMIN"
+            )
+        )
+        admin_role = res_role.scalars().first()
+        if admin_role is None:
+            admin_role = Role(
+                name="ADMIN",
+                description="系统管理员角色",
+                workspace_id=workspace.id,
+                is_system_role=True,
+            )
+            self.session.add(admin_role)
 
-        # Assign ADMIN role to the membership (populates membership_role association)
-        user_organization.roles.append(admin_role)
+        await self.session.flush()
 
-        user.organization_id = organization.id
+        # Bind permission to role (idempotent)
+        res_rp = await self.session.execute(
+            select(RolePermission).where(
+                RolePermission.role_id == admin_role.id,
+                RolePermission.permission_id == admin_perm.id,
+            )
+        )
+        if res_rp.scalars().first() is None:
+            self.session.add(
+                RolePermission(role_id=admin_role.id, permission_id=admin_perm.id)
+            )
+
+        # Assign role to user within the workspace via association table
+        res_ur = await self.session.execute(
+            select(UserRole).where(
+                UserRole.user_id == user.id,
+                UserRole.role_id == admin_role.id,
+                UserRole.workspace_id == workspace.id,
+            )
+        )
+        if res_ur.scalars().first() is None:
+            self.session.add(
+                UserRole(
+                    user_id=user.id,
+                    role_id=admin_role.id,
+                    workspace_id=workspace.id,
+                )
+            )
 
         return user

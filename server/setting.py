@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any, Dict
 
 from pydantic.v1 import BaseSettings, PostgresDsn
 
@@ -54,10 +54,9 @@ class Config(BaseConfig):
     SECRET_KEY: str = "super-secret-key"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60 * 24
-    EMAIL = "test@pandabi.ai"
+    EMAIL = "test@wenshuai.com"
     PASSWORD = "qwer@123"
-    DEFAULT_ORGANIZATION = "PandaBI"
-    DEFAULT_SPACE = "pandasai"
+    DEFAULT_SPACE = "admin"
 
 
 config: Config = Config()

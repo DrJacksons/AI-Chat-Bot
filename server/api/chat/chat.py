@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 
-from app.controllers.chat import ChatController
-from app.schemas.requests.chat import ChatRequest
-from app.schemas.responses import APIResponse
-from app.schemas.responses.chat import ChatResponse
-from app.schemas.responses.users import UserInfo
-from core.factory import Factory
-from core.fastapi.dependencies.current_user import get_current_user
+from server.app.controllers.chat import ChatController
+from server.app.schemas.requests.chat import ChatRequest
+from server.app.schemas.responses import APIResponse
+from server.app.schemas.responses.chat import ChatResponse
+from server.app.schemas.responses.users import UserInfo
+from server.core.factory import Factory
+from server.core.fastapi.dependencies.current_user import get_current_user
 
 chat_router = APIRouter()
 
