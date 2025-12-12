@@ -117,6 +117,20 @@ class DatasetController(BaseController[Dataset]):
         return DatasetsDetailsResponseModel(dataset=dataset)
     
 
+    async def create_remote_dataset(self, name: str, description: str, url: str, user: UserInfo):
+        dataset = await self.dataset_repository.create_dataset(
+            user_id=user.id,
+            name=name,
+            description=description,
+            connector_type=ConnectorType.REMOTE,
+            config={"url": url},
+            head=None,
+        )
+
+        await self.space_repository.add_dataset_to_space(workspace_id=user.space.id,dataset_id=dataset.id)
+
+        return DatasetsDetailsResponseModel(dataset=dataset)
+
     async def download_dataset(self, dataset_id):
         await self.get_dataset_by_id(dataset_id)
         file_path = os.path.join(os.getcwd(), 'data', f"{dataset_id}.csv")

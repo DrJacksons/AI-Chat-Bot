@@ -15,14 +15,13 @@ from server.app.repositories.logs import LogsRepository
 from server.app.schemas.requests.chat import ChatRequest
 from server.app.schemas.responses.chat import ChatResponse
 from server.app.schemas.responses.users import UserInfo
-from server.app.utils.memory import prepare_conv_memory
-from server.core.constants import CHAT_FALLBACK_MESSAGE
+# from server.app.utils.memory import prepare_conv_memory
 from server.core.controller import BaseController
 from server.core.database.transactional import Propagation, Transactional
 from server.core.utils.dataframe import load_df
 from server.core.utils.json_encoder import jsonable_encoder
 from server.core.utils.response_parser import JsonResponseParser
-from server.core.config import config as env_config
+from server.setting import config as env_config
 
 
 class ChatController(BaseController[User]):
@@ -113,8 +112,8 @@ class ChatController(BaseController[User]):
             return [
                 {
                     "type": "string",
-                    "message": CHAT_FALLBACK_MESSAGE,
-                    "value": CHAT_FALLBACK_MESSAGE,
+                    "message": "I'm sorry, I wasn't able to fully understand your question. Could you please rephrase it or provide more details?",
+                    "value": "I'm sorry, I wasn't able to fully understand your question. Could you please rephrase it or provide more details?",
                 }
             ]
 

@@ -2,7 +2,7 @@ import base64
 import json
 from typing import Any
 
-from pandasai.responses.response_parser import IResponseParser
+from data_inteligence.helpers.response_parser import IResponseParser
 
 
 class JsonResponseParser(IResponseParser):

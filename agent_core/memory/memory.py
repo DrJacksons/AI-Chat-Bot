@@ -14,7 +14,6 @@ from agent_core.llm.oai import OpenAIChatModel
 from agent_core.vectorstores import VectorStore
 
 
-
 class Memory(MemoryBase):
     def __init__(self, db_path: str):
         self.db = SQLiteManager(db_path)
@@ -24,6 +23,98 @@ class Memory(MemoryBase):
     def _should_use_agent_memory_extraction(self, messages: List[dict], metadata: dict) -> bool:
         """判断是否需要使用智能体记忆提取。"""
         return any(msg.get("role") == "assistant" for msg in messages)
+
+    def add(
+        self,
+        messages,
+        *,
+        user_id: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        run_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        infer: bool = True,
+        memory_type: Optional[str] = None,
+        prompt: Optional[str] = None,
+    ):
+        """
+        Create a new memory.
+
+        Adds new memories scoped to a single session id (e.g. `user_id`, `agent_id`, or `run_id`). One of those ids is required.
+
+        Args:
+            messages (str or List[Dict[str, str]]): The message content or list of messages
+                (e.g., `[{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi"}]`)
+                to be processed and stored.
+            user_id (str, optional): ID of the user creating the memory. Defaults to None.
+            agent_id (str, optional): ID of the agent creating the memory. Defaults to None.
+            run_id (str, optional): ID of the run creating the memory. Defaults to None.
+            metadata (dict, optional): Metadata to store with the memory. Defaults to None.
+            infer (bool, optional): If True (default), an LLM is used to extract key facts from
+                'messages' and decide whether to add, update, or delete related memories.
+                If False, 'messages' are added as raw memories directly.
+            memory_type (str, optional): Specifies the type of memory. Currently, only
+                `MemoryType.PROCEDURAL.value` ("procedural_memory") is explicitly handled for
+                creating procedural memories (typically requires 'agent_id'). Otherwise, memories
+                are treated as general conversational/factual memories.memory_type (str, optional): Type of memory to create. Defaults to None. By default, it creates the short term memories and long term (semantic and episodic) memories. Pass "procedural_memory" to create procedural memories.
+            prompt (str, optional): Prompt to use for the memory creation. Defaults to None.
+
+
+        Returns:
+            dict: A dictionary containing the result of the memory addition operation, typically
+                  including a list of memory items affected (added, updated) under a "results" key,
+                  and potentially "relations" if graph store is enabled.
+                  Example for v1.1+: `{"results": [{"id": "...", "memory": "...", "event": "ADD"}]}`
+
+        Raises:
+            Mem0ValidationError: If input validation fails (invalid memory_type, messages format, etc.).
+            VectorStoreError: If vector store operations fail.
+            GraphStoreError: If graph store operations fail.
+            EmbeddingError: If embedding generation fails.
+            LLMError: If LLM operations fail.
+            DatabaseError: If database operations fail.
+        """
+
+        processed_metadata, effective_filters = _build_filters_and_metadata(
+            user_id=user_id,
+            agent_id=agent_id,
+            run_id=run_id,
+            input_metadata=metadata,
+        )
+
+        if memory_type is not None and memory_type != MemoryType.PROCEDURAL.value:
+            raise Mem0ValidationError(
+                message=f"Invalid 'memory_type'. Please pass {MemoryType.PROCEDURAL.value} to create procedural memories.",
+                error_code="VALIDATION_002",
+                details={"provided_type": memory_type, "valid_type": MemoryType.PROCEDURAL.value},
+                suggestion=f"Use '{MemoryType.PROCEDURAL.value}' to create procedural memories."
+            )
+
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
+
+        elif isinstance(messages, dict):
+            messages = [messages]
+
+        elif not isinstance(messages, list):
+            raise Mem0ValidationError(
+                message="messages must be str, dict, or list[dict]",
+                error_code="VALIDATION_003",
+                details={"provided_type": type(messages).__name__, "valid_types": ["str", "dict", "list[dict]"]},
+                suggestion="Convert your input to a string, dictionary, or list of dictionaries."
+            )
+
+        if agent_id is not None and memory_type == MemoryType.PROCEDURAL.value:
+            results = self._create_procedural_memory(messages, metadata=processed_metadata, prompt=prompt)
+            return results
+
+        if self.config.llm.config.get("enable_vision"):
+            messages = parse_vision_messages(messages, self.llm, self.config.llm.config.get("vision_details"))
+        else:
+            messages = parse_vision_messages(messages)
+
+        vector_store_result = self._add_to_vector_store(messages, processed_metadata, effective_filters, infer)
+
+        return {"results": vector_store_result}
 
     def _add_to_vector_store(self, messages: List[dict], metadata: dict, filters, infer):
         """Add messages to the vector store.
@@ -116,7 +207,6 @@ class Memory(MemoryBase):
         if filters.get("agent_id"):
             search_filters["agent_id"] = filters["agent_id"]
         
-
     def _process_metadata_filters(self, metadata_filters: Dict[str, Any]) -> Dict[str, Any]:
         """
         处理metadata_filters并将其转换为向量存储兼容的格式。
@@ -197,4 +287,11 @@ class Memory(MemoryBase):
                 return True
         return False
 
-
+    # def add_to_openai_format(self, message: str, is_user: bool) -> None:
+    #     """
+    #     将消息添加到OpenAI格式的内存中。
+    #     Args:
+    #         message: 要添加的消息
+    #         is_user: 是否为用户消息
+    #     """
+    #     self.add(message, is_user=is_user)

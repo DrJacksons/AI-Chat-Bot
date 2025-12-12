@@ -12,3 +12,11 @@ class MaliciousQueryError(Exception):
     Args:
         Exception (Exception): MaliciousQueryError
     """
+
+class MethodNotImplementedError(Exception):
+    """
+    Raised when a method is not implemented.
+
+    Args:
+        Exception (Exception): MethodNotImplementedError
+    """

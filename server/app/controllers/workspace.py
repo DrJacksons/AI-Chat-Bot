@@ -44,7 +44,6 @@ class WorkspaceController(BaseController[Workspace]):
                 dataset_id=dataset.id, workspace_id=workspace_id
             )
 
-
     async def get_workspace_by_id(self, workspace_id: str):
         workspace = await self.space_repository.get_by_id(id=workspace_id)
         if not workspace:
@@ -61,7 +60,6 @@ class WorkspaceController(BaseController[Workspace]):
         users = await self.space_repository.get_users_by_workspace_id(workspace_id)
         return WorkspaceUsersResponse(users=users)
     
-    
     async def get_workspace_datasets(self, workspace_id) -> WorkspaceDatasetsResponseModel:
         await self.get_workspace_by_id(workspace_id)        
         datasets = await self.dataset_repository.get_all_by_workspace_id(workspace_id)
@@ -72,7 +70,6 @@ class WorkspaceController(BaseController[Workspace]):
             )
         return WorkspaceDatasetsResponseModel(datasets=datasets)
     
-
     async def get_user_workspaces(self, user):
         result = await self.space_repository.get_user_workspaces(user)
 
@@ -88,17 +85,14 @@ class WorkspaceController(BaseController[Workspace]):
             )
         return workspace
 
-
     async def delete_workspace(self, workspace_id):
         await self.space_repository.delete_workspace(workspace_id)
         return {"message": "Workspace deleted successfully"}
-
 
     async def add_workspace(self, workspace, user):
         await self.space_repository.create_workspace(workspace, user)
         return {"message": "Workspace successfully Added"}
     
-
     async def edit_workspace(self, workspace_id, workspace):
         await self.space_repository.edit_workspace(workspace_id, workspace)
         return {"message": "Workspace successfully Updated"}

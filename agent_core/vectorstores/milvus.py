@@ -4,11 +4,9 @@ from typing import Dict, Iterable, List, Optional
 
 from pydantic import Field
 from pymilvus import DataType, MilvusClient, model
-
-from pandasai.helpers.logger import Logger
 from .vectorstore import VectorStore
 
-DEFAULT_COLLECTION_NAME = "pandasai"
+DEFAULT_COLLECTION_NAME = "ai"
 UUID_NAMESPACE = "f55f1395-e097-4f35-8c20-90fdea7baa14"
 ID = "id"
 EMBEDDING = "vector"
