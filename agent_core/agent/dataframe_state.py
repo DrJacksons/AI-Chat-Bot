@@ -32,7 +32,6 @@ class AgentState:
         ],
         config: Optional[Union[Config, dict]] = None,
         memory_size: Optional[int] = 10,
-        vectorstore: Optional[VectorStore] = None,
         description: str = None,
     ):
         """Initialize the state with the given parameters."""
@@ -45,7 +44,6 @@ class AgentState:
         self.logger = Logger(
             save_logs=self.config.save_logs, verbose=self.config.verbose
         )
-        self.vectorstore = vectorstore
         self._configure()
 
     def _configure(self):

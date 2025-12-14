@@ -84,3 +84,13 @@ class UserController(BaseController[User]):
 
         user.features = features
         return user.features
+
+    @Transactional(propagation=Propagation.REQUIRED)
+    async def assign_role(self, user_id: str, role_id: str, workspace_id: str) -> None:
+        success = await self.user_repository.add_role(user_id, role_id, workspace_id)
+        if not success:
+            raise BadRequestException("Role already assigned to user in this workspace")
+
+    @Transactional(propagation=Propagation.REQUIRED)
+    async def remove_role(self, user_id: str, role_id: str, workspace_id: str) -> None:
+        await self.user_repository.remove_role(user_id, role_id, workspace_id)

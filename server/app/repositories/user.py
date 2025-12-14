@@ -38,6 +38,44 @@ class UserRepository(BaseRepository[User]):
 
         return await self._one_or_none(query)
 
+    def _join_departments(self, query: Select) -> Select:
+        return query.options(joinedload(User.departments))
+
+    async def add_role(self, user_id: str, role_id: str, workspace_id: str) -> bool:
+        """
+        Assign a role to a user in a specific workspace.
+        """
+        stmt = select(UserRole).where(
+            UserRole.user_id == user_id,
+            UserRole.role_id == role_id,
+            UserRole.workspace_id == workspace_id,
+        )
+        result = await self.session.execute(stmt)
+        if result.scalars().first():
+            return False  # Already exists
+
+        user_role = UserRole(
+            user_id=user_id, role_id=role_id, workspace_id=workspace_id
+        )
+        self.session.add(user_role)
+        return True
+
+    async def remove_role(self, user_id: str, role_id: str, workspace_id: str) -> None:
+        """
+        Remove a role from a user in a specific workspace.
+        """
+        # Find the specific UserRole entry
+        stmt = select(UserRole).where(
+            UserRole.user_id == user_id,
+            UserRole.role_id == role_id,
+            UserRole.workspace_id == workspace_id,
+        )
+        result = await self.session.execute(stmt)
+        user_role = result.scalars().first()
+        
+        if user_role:
+            await self.session.delete(user_role)
+
     def get_user_me_details(self) -> User:
         return
 

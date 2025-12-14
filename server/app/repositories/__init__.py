@@ -5,6 +5,7 @@ from .workspace import WorkspaceRepository
 from .logs import LogsRepository
 from .role import RoleRepository
 from .permission import PermissionRepository
+from .department import DepartmentRepository
 
 __all__ = [
     "UserRepository",
@@ -14,4 +15,5 @@ __all__ = [
     "LogsRepository",
     "RoleRepository",
     "PermissionRepository",
+    "DepartmentRepository",
 ]

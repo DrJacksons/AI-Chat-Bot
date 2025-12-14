@@ -1,13 +1,12 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Path, Query
 
-from app.controllers.conversation import ConversationController
-from app.schemas.responses import APIResponse
-
-from app.schemas.responses.conversation import ConversationList, ConversationMessageList
-from app.schemas.responses.users import UserInfo
-from core.factory import Factory
-from core.fastapi.dependencies.current_user import get_current_user
+from server.app.schemas.responses import APIResponse
+from server.app.controllers import ConversationController
+from server.app.schemas.responses.conversation import ConversationList, ConversationMessageList
+from server.app.schemas.responses.users import UserInfo
+from server.core.factory import Factory
+from server.core.fastapi.dependencies.current_user import get_current_user
 from uuid import UUID
 
 conversation_router = APIRouter()

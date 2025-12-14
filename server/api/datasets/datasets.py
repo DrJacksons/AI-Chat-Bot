@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Path, status, UploadFile, File, Form
 from typing import Optional
-from app.controllers.datasets import DatasetController
-from app.schemas.responses.datasets import WorkspaceDatasetsResponseModel, DatasetsDetailsResponseModel
-from core.factory import Factory
+from server.app.controllers.datasets import DatasetController
+from server.app.schemas.responses.datasets import WorkspaceDatasetsResponseModel, DatasetsDetailsResponseModel
+from server.core.factory import Factory
 from uuid import UUID
-from app.schemas.requests.datasets import DatasetUpdateRequestModel
-from app.schemas.responses.users import UserInfo
-from core.fastapi.dependencies.current_user import get_current_user
+from server.app.schemas.requests.datasets import DatasetUpdateRequestModel
+from server.app.schemas.responses.users import UserInfo
+from server.core.fastapi.dependencies.current_user import get_current_user
 from fastapi.responses import FileResponse
 
 dataset_router = APIRouter()

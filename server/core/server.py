@@ -149,7 +149,8 @@ def create_app() -> FastAPI:
 
     @app_.on_event("startup")
     async def on_startup():
-        await init_database()
+        # await init_database()
+        await init_user()
 
     return app_
 

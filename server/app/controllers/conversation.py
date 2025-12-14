@@ -1,10 +1,10 @@
 from fastapi import status, HTTPException
-from app.models import User, UserConversation
-from app.repositories import UserRepository
-from app.repositories.conversation import ConversationRepository
+from server.app.models import User, UserConversation
+from server.app.repositories import UserRepository
+from server.app.repositories.conversation import ConversationRepository
 
-from app.schemas.responses.conversation import ConversationList, ConversationMessageList
-from core.controller import BaseController
+from server.app.schemas.responses.conversation import ConversationList, ConversationMessageList
+from server.core.controller import BaseController
 
 
 class ConversationController(BaseController[UserConversation]):

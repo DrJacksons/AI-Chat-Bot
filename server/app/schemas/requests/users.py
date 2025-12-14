@@ -1,5 +1,5 @@
 import re
-from pydantic import BaseModel, EmailStr, constr, field_validator
+from pydantic import BaseModel, EmailStr, constr, field_validator, UUID4
 
 
 class RegisterUserRequest(BaseModel):
@@ -41,3 +41,7 @@ class RegisterUserRequest(BaseModel):
 class LoginUserRequest(BaseModel):
     email: EmailStr
     password: str
+
+class AssignRoleRequest(BaseModel):
+    role_id: UUID4
+    workspace_id: UUID4

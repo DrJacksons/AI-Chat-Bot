@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, Path
 from uuid import UUID
 
-from app.controllers.workspace import WorkspaceController
-from core.factory import Factory
-from app.schemas.responses.users import UserInfo
-from core.fastapi.dependencies.current_user import get_current_user
-from app.schemas.responses.users import WorkspaceUsersResponse
-from app.schemas.responses.datasets import WorkspaceDatasetsResponseModel
-from app.schemas.requests.workspace import WorkspaceCreateRequestModel
+from server.app.controllers.workspace import WorkspaceController
+from server.core.factory import Factory
+from server.app.schemas.responses.users import UserInfo
+from server.core.fastapi.dependencies.current_user import get_current_user
+from server.app.schemas.responses.users import WorkspaceUsersResponse
+from server.app.schemas.responses.datasets import WorkspaceDatasetsResponseModel
+from server.app.schemas.requests.workspace import WorkspaceCreateRequestModel
 
 workspace_router = APIRouter()
 

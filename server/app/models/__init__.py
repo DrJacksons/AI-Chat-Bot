@@ -43,7 +43,7 @@ class User(Base):
 
     datasets = relationship("Dataset", back_populates="user")
     connectors = relationship("Connector", back_populates="user")
-    departments = relationship("Department", back_populates="user")
+    departments = relationship("Department", secondary="user_department", back_populates="users")
     spaces = relationship("Workspace", back_populates="user")
     user_spaces = relationship("UserSpace", back_populates="user")
     logs = relationship("Logs", back_populates="user")
@@ -66,8 +66,14 @@ class Department(Base):
     description = Column(String, nullable=True)
     settings = Column(JSON, nullable=True)
 
-    users = relationship("User", back_populates="departments")
+    users = relationship("User", secondary="user_department", back_populates="departments")
     workspaces = relationship("Workspace", back_populates="department")
+
+
+class UserDepartment(Base):
+    __tablename__ = "user_department"
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), primary_key=True)
+    department_id = Column(UUID(as_uuid=True), ForeignKey("department.id"), primary_key=True)
 
 
 class Role(Base):
