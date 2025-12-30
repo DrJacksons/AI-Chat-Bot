@@ -5,7 +5,7 @@ from sqlglot import select
 from sqlglot.optimizer.normalize_identifiers import normalize_identifiers
 from sqlglot.optimizer.qualify_columns import quote_identifiers
 
-from data_inteligence.data_loader.semantic_layer_schema import SemanticLayerSchema
+from data_inteligence.data_loader.semantic_layer_schema import SemanticLayerSchema, Source
 from data_inteligence.query_builders.sql_transformation_manager import SQLTransformationManager
 
 

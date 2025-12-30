@@ -8,7 +8,7 @@ class ErrorResponse(BaseResponse):
 
     def __init__(
         self,
-        value="Unfortunately, I was not able to get your answer. Please try again.",
+        value="抱歉，我无法回答你的问题。请重试。",
         last_code_executed: str = None,
         error: str = None,
     ):

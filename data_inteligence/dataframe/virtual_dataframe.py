@@ -24,7 +24,7 @@ class VirtualDataFrame(DataFrame):
     def __init__(self, *args, **kwargs):
         self._loader: Optional[SQLDatasetLoader] = kwargs.pop("data_loader", None)
         if not self._loader:
-            raise VirtualizationError("Data loader is required for virtualization!")
+            raise NameError("Data loader is required for virtualization!")
         self._head = None
 
         super().__init__(

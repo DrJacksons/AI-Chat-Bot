@@ -54,9 +54,9 @@ class Config(BaseConfig):
     SECRET_KEY: str = "super-secret-key"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60 * 24
-    EMAIL = "test@wenshuai.com"
-    PASSWORD = "qwer@123"
-    DEFAULT_SPACE = "admin"
+    EMAIL: str = "admin@wenshuai.com"
+    PASSWORD: str = "qwer@123"
+    DEFAULT_SPACE: str = "admin"
 
 
 config: Config = Config()

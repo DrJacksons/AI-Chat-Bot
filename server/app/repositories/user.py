@@ -41,6 +41,11 @@ class UserRepository(BaseRepository[User]):
     def _join_departments(self, query: Select) -> Select:
         return query.options(joinedload(User.departments))
 
+    def _join_roles(self, query: Select) -> Select:
+        return query.options(
+            joinedload(User.roles).joinedload(Role.permissions)
+        )
+
     async def add_role(self, user_id: str, role_id: str, workspace_id: str) -> bool:
         """
         Assign a role to a user in a specific workspace.
@@ -84,8 +89,8 @@ class UserRepository(BaseRepository[User]):
         user = User(
             email=config.EMAIL,
             password=password,
-            nick_name="admin",
-            full_name="admin",
+            last_name="admin",
+            first_name="admin",
             verified=True,
             features={},
         )
@@ -93,7 +98,7 @@ class UserRepository(BaseRepository[User]):
 
         department = Department(
             name="System",
-            description="系统默认部门",
+            description="系统管理部门",
             settings={},
         )
         self.session.add(department)
@@ -102,7 +107,7 @@ class UserRepository(BaseRepository[User]):
 
         workspace = Workspace(
             name=config.DEFAULT_SPACE,
-            description="默认工作空间（admin）",
+            description="管理员工作空间，具有所有权限",
             user_id=user.id,
             department_id=department.id,
         )

@@ -39,7 +39,6 @@ async def create_remote_dataset(
         name: str = Form(...),
         description: Optional[str] = Form(None),
         url: str = Form(...),
-        access_method: str = Form(...),
         user: UserInfo = Depends(get_current_user),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):

@@ -31,7 +31,6 @@ class WorkspaceController(BaseController[Workspace]):
         for dataset in datasets:
             dataset = await self.dataset_repository.create_dataset(
                 user_id=user.id,
-                organization_id=user.memberships[0].organization_id,
                 name=dataset["file_name"],
                 connector_type=ConnectorType.CSV,
                 config={

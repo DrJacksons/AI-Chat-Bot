@@ -35,8 +35,8 @@ class User(Base):
     __tablename__ = "user"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String(255), index=True, unique=True)
-    nick_name = Column(String(255), nullable=True)
-    full_name = Column(String(255), nullable=True)
+    last_name = Column(String(255), nullable=True)
+    first_name = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.now)
     password = Column(String(255))
     verified = Column(Boolean, default=False)

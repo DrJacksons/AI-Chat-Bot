@@ -26,7 +26,7 @@ class UserController(BaseController[User]):
         return await self.user_repository.get_by_email(email)
 
     async def me(self) -> UserInfo:
-        users = await self.get_all(limit=1)
+        users = await self.get_all(limit=1, join_={"departments", "roles"})
         if not users:
             raise NotFoundException(
                 "No user found. Please restart the server and try again"
@@ -65,7 +65,7 @@ class UserController(BaseController[User]):
 
         return UserInfo(
             email=user.email,
-            nick_name=user.nick_name,
+            last_name=user.last_name,
             id=user.id,
             department=department_base,
             space=space_base,

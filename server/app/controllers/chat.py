@@ -72,14 +72,16 @@ class ChatController(BaseController[User]):
         for dataset in datasets:
             config = dataset.connector.config
             df = pd.read_csv(config["file_path"])
-            connector = PandasConnector(
-                {"original_df": df},
-                name=dataset.name,
-                description=dataset.description,
-                custom_head=(load_df(dataset.head) if dataset.head else None),
-                field_descriptions=dataset.field_descriptions,
-            )
-            connectors.append(connector)
+            # connector = PandasConnector(
+            #     {"original_df": df},
+            #     name=dataset.name,
+            #     description=dataset.description,
+            #     custom_head=(load_df(dataset.head) if dataset.head else None),
+            #     field_descriptions=dataset.field_descriptions,
+            # )
+            if dataset.description:
+                df.schema.description = dataset.description
+            connectors.append(df)
 
         path_plot_directory = find_project_root() + "/exports/" + str(conversation_id)
 
@@ -91,10 +93,10 @@ class ChatController(BaseController[User]):
         }
 
         if env_config.OPENAI_API_KEY:
-            llm = OpenAI(env_config.OPENAI_API_KEY)
+            llm = OpenAIChatModel(env_config.OPENAI_API_KEY)
             config["llm"] = llm
 
-        agent = Agent(connectors, config=config)
+        agent = DataFrameAgent(connectors, config=config)
 
         # add to log get log id
         

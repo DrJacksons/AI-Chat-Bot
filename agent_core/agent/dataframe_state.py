@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 
 from data_inteligence.dataframe import DataFrame, VirtualDataFrame
 from agent_core.llm.base import BaseChatModel
+from agent_core.config import Config
+from agent_core.memory.memory import Memory
 
 
 @dataclass

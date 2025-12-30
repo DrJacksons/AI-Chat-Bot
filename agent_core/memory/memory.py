@@ -1,7 +1,6 @@
 from ast import Dict
 from email import message
-from turtle import update
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 from copy import deepcopy
 from .base import MemoryBase
 from .storage import SQLiteManager

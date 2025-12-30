@@ -1,7 +1,11 @@
 import yaml
 from pathlib import Path
 from abc import ABC, abstractmethod
+from typing import Optional
 from .semantic_layer_schema import SemanticLayerSchema
+from data_inteligence.exceptions import MethodNotImplementedError
+from data_inteligence.dataframe.base import DataFrame
+from data_inteligence.constants import LOCAL_SOURCE_TYPES
 
 
 class DatasetLoader(ABC):
@@ -20,14 +24,37 @@ class DatasetLoader(ABC):
         pass
 
     @classmethod
-    def craete_loader_from_schema(cls, schema: SemanticLayerSchema, dataset_path: str):
-        """Factory method to create the appropriate loader based on the dataset type."""
-        return cls(schema, dataset_path)
+    def create_loader_from_schema(
+        cls, schema: SemanticLayerSchema, dataset_path: str
+    ) -> "DatasetLoader":
+        """
+        Factory method to create the appropriate loader based on the dataset type.
+        """
+
+        if schema.source and schema.source.type in LOCAL_SOURCE_TYPES:
+            from data_inteligence.data_loader.local_loader import LocalDatasetLoader
+
+            loader = LocalDatasetLoader(schema, dataset_path)
+        elif schema.view:
+            from data_inteligence.data_loader.view_loader import ViewDatasetLoader
+
+            loader = ViewDatasetLoader(schema, dataset_path)
+        else:
+            from data_inteligence.data_loader.sql_loader import SQLDatasetLoader
+
+            loader = SQLDatasetLoader(schema, dataset_path)
+
+        loader.query_builder.validate_query_builder()
+        return loader
 
     @classmethod
     def create_loader_from_path(cls, dataset_path: str) -> "DatasetLoader":
-        """Factory method to create the appropriate loader based on the dataset type."""
-        return cls(schema, dataset_path)
+        """
+        Factory method to create the appropriate loader based on the dataset type.
+        """
+        dataset_path = dataset_path.replace("_", "-")
+        schema = cls._read_schema_file(dataset_path)
+        return DatasetLoader.create_loader_from_schema(schema, dataset_path)
 
     @staticmethod
     def _read_schema_file(dataset_path: str) -> SemanticLayerSchema:

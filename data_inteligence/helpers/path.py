@@ -3,7 +3,7 @@ import re
 from io import BytesIO
 from typing import Union
 
-from ..helpers.sql_sanitizer import sanitize_file_name
+from .sql_sanitizer import sanitize_file_name
 
 
 def find_project_root(filename=None):

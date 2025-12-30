@@ -20,3 +20,17 @@ class MethodNotImplementedError(Exception):
     Args:
         Exception (Exception): MethodNotImplementedError
     """
+
+class CodeExecutionError(Exception):
+    """
+    Raise error if code execution fails
+    Args:
+        Exception (Exception): CodeExecutionError
+    """
+
+class InvalidLLMOutputType(Exception):
+    """
+    Raise error if the output type is invalid
+    Args:
+        Exception (Exception): InvalidLLMOutputType
+    """

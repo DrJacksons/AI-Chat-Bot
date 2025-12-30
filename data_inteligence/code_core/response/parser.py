@@ -1,9 +1,6 @@
 import re
-
 import numpy as np
 import pandas as pd
-
-from pandasai.exceptions import InvalidOutputValueMismatch
 
 from .base import BaseResponse
 from .chart import ChartResponse
@@ -35,28 +32,28 @@ class ResponseParser:
             or "type" not in result
             or "value" not in result
         ):
-            raise InvalidOutputValueMismatch(
+            raise ValueError(
                 'Result must be in the format of dictionary of type and value like `result = {"type": ..., "value": ... }`'
             )
         elif result["type"] == "number":
             if not isinstance(result["value"], (int, float, np.int64)):
-                raise InvalidOutputValueMismatch(
+                raise ValueError(
                     "Invalid output: Expected a numeric value for result type 'number', but received a non-numeric value."
                 )
         elif result["type"] == "string":
             if not isinstance(result["value"], str):
-                raise InvalidOutputValueMismatch(
+                raise ValueError(
                     "Invalid output: Expected a string value for result type 'string', but received a non-string value."
                 )
         elif result["type"] == "dataframe":
             if not isinstance(result["value"], (pd.DataFrame, pd.Series, dict)):
-                raise InvalidOutputValueMismatch(
+                raise ValueError(
                     "Invalid output: Expected a Pandas DataFrame or Series, but received an incompatible type."
                 )
 
         elif result["type"] == "plot":
             if not isinstance(result["value"], (str, dict)):
-                raise InvalidOutputValueMismatch(
+                raise ValueError(
                     "Invalid output: Expected a plot save path str but received an incompatible type."
                 )
 
@@ -68,7 +65,7 @@ class ResponseParser:
 
             path_to_plot_pattern = r"^(\/[\w.-]+)+(/[\w.-]+)*$|^[^\s/]+(/[\w.-]+)*$"
             if not bool(re.match(path_to_plot_pattern, result["value"])):
-                raise InvalidOutputValueMismatch(
+                raise ValueError(
                     "Invalid output: Expected a plot save path str but received an incompatible type."
                 )
 

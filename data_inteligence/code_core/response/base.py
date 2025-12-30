@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from pandasai.helpers.json_encoder import CustomJsonEncoder
+from data_inteligence.helpers.json_encoder import CustomJsonEncoder
 
 
 class BaseResponse:
