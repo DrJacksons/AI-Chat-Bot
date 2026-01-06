@@ -2,7 +2,13 @@ from functools import partial
 
 from fastapi import Depends
 
-from server.app.controllers import UserController, LogsController, WorkspaceController, AuthController, DepartmentController, RoleController
+from server.app.controllers import (
+    UserController,
+    LogsController,
+    WorkspaceController,
+    AuthController,
+    DepartmentController,
+)
 from server.app.models import (
     Dataset,
     Department,
@@ -10,9 +16,15 @@ from server.app.models import (
     User,
     UserConversation,
     Logs,
-    Role
 )
-from server.app.repositories import UserRepository, WorkspaceRepository, LogsRepository, DatasetRepository, ConversationRepository, DepartmentRepository, RoleRepository
+from server.app.repositories import (
+    UserRepository,
+    WorkspaceRepository,
+    LogsRepository,
+    DatasetRepository,
+    ConversationRepository,
+    DepartmentRepository,
+)
 from server.core.database import get_session
 
 
@@ -28,7 +40,6 @@ class Factory:
     dataset_repository = partial(DatasetRepository, Dataset)
     conversation_repository = partial(ConversationRepository, UserConversation)
     logs_repository = partial(LogsRepository, Logs)
-    role_repository = partial(RoleRepository, Role)
 
     def get_user_controller(self, db_session=Depends(get_session)):
         return UserController(
@@ -39,11 +50,6 @@ class Factory:
     def get_department_controller(self, db_session=Depends(get_session)):
         return DepartmentController(
             department_repository=self.department_repository(db_session=db_session),
-        )
-
-    def get_role_controller(self, db_session=Depends(get_session)):
-        return RoleController(
-            role_repository=self.role_repository(db_session=db_session),
         )
 
     def get_space_controller(self, db_session=Depends(get_session)):

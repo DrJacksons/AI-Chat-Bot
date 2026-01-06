@@ -6,8 +6,11 @@ from pathlib import Path
 # 默认API url
 DEFAULT_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
+# 默认存储路径
+DEFAULT_STORGE_PATH = Path("stores")
+
 # 如果用户未提供任何图表，则存储图表的默认目录
-DEFAULT_CHART_DIRECTORY = Path("exports") / "charts"
+DEFAULT_CHART_DIRECTORY = DEFAULT_STORGE_PATH / "charts"
 
 # 文件和目录的默认权限
 DEFAULT_FILE_PERMISSIONS = 0o755

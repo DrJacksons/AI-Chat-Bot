@@ -54,7 +54,6 @@ async def delete_datasets(
     return await datasets_controller.delete_datasets(dataset_id, user)
 
 
-
 @dataset_router.put("/{dataset_id}", status_code=status.HTTP_200_OK)
 async def update_datasets(
         dataset_update: DatasetUpdateRequestModel,

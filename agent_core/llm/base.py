@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any, Union, Callable, AsyncIterator
 
+from agent_core.prompts.base import BasePrompt
+
 
 class BaseChatModel(ABC):
     """LLM 聊天模型的基类"""
@@ -143,3 +145,28 @@ class BaseChatModel(ABC):
                            通常包含 'content' (文本回复) 和 'function_call' (如果被调用)。
         """
         raise NotImplementedError
+
+
+    async def call(
+        self,
+        prompt: BasePrompt,
+        memory: List[Dict[str, str]] = None,
+        stream: bool = False,
+    ):
+        """
+        整合提示词和memory历史对话，给到大模型LLM，生成回复
+        
+        Args:
+            prompt (str): 用户输入的提示词
+            memory (List[Dict[str, str]]): 包含历史对话的列表，每个对话都是一个字典，包含 "role" 和 "content" 键。
+        
+        Returns:
+            str: 模型生成的回复
+        """
+        messages = memory.to_openai_messages() if memory else []
+        messages.append({"role": "user", "content": prompt.to_string()})
+        return await self.chat(
+            messages=messages,
+            stream=stream,
+        )
+        

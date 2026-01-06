@@ -15,7 +15,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.associationproxy import association_proxy
 
 from server.core.database import Base
 
@@ -40,23 +39,17 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.now)
     password = Column(String(255))
     verified = Column(Boolean, default=False)
+    department_id = Column(UUID(as_uuid=True), ForeignKey("department.id"), nullable=True)
+    permission_id = Column(UUID(as_uuid=True), ForeignKey("permission.id"), nullable=True)
 
+    department = relationship("Department", back_populates="users", foreign_keys=[department_id])
     datasets = relationship("Dataset", back_populates="user")
     connectors = relationship("Connector", back_populates="user")
-    departments = relationship("Department", secondary="user_department", back_populates="users")
     spaces = relationship("Workspace", back_populates="user")
     user_spaces = relationship("UserSpace", back_populates="user")
     logs = relationship("Logs", back_populates="user")
     features = Column(JSON, nullable=True)
-    # 复用中间表user_role，多对多
-    roles = relationship(
-        "Role",
-        secondary="user_role",
-        back_populates="users",
-        lazy="selectin",
-    )
-    # 关联角色的所有权限（聚合自角色权限）
-    permissions = association_proxy("roles", "permissions")
+    permission = relationship("Permission", back_populates="users", foreign_keys=[permission_id])
 
 
 class Department(Base):
@@ -66,30 +59,8 @@ class Department(Base):
     description = Column(String, nullable=True)
     settings = Column(JSON, nullable=True)
 
-    users = relationship("User", secondary="user_department", back_populates="departments")
+    users = relationship("User", back_populates="department")
     workspaces = relationship("Workspace", back_populates="department")
-
-
-class UserDepartment(Base):
-    __tablename__ = "user_department"
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), primary_key=True)
-    department_id = Column(UUID(as_uuid=True), ForeignKey("department.id"), primary_key=True)
-
-
-class Role(Base):
-    __tablename__ = "role"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    name = Column(String(255))
-    description = Column(String, nullable=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspace.id"), nullable=True)
-    is_system_role = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.now)
-
-    workspace = relationship("Workspace", back_populates="roles")
-    permissions = relationship("Permission", secondary="role_permission", back_populates="roles", lazy="selectin")
-    users = relationship("User", secondary="user_role", back_populates="roles")
-
-    __table_args__ = (UniqueConstraint("workspace_id", "name", name="uq_role_workspace_name"),)
 
 
 class Permission(Base):
@@ -101,22 +72,9 @@ class Permission(Base):
     description = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.now)
 
-    roles = relationship("Role", secondary="role_permission", back_populates="permissions")
+    users = relationship("User", back_populates="permission")
 
     __table_args__ = (UniqueConstraint("code", name="uq_permission_code"),)
-
-
-class RolePermission(Base):
-    __tablename__ = "role_permission"
-    role_id = Column(UUID(as_uuid=True), ForeignKey("role.id"), primary_key=True)
-    permission_id = Column(UUID(as_uuid=True), ForeignKey("permission.id"), primary_key=True)
-
-
-class UserRole(Base):
-    __tablename__ = "user_role"
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), primary_key=True)
-    role_id = Column(UUID(as_uuid=True), ForeignKey("role.id"), primary_key=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspace.id"), primary_key=True)
 
 
 class Dataset(Base):
@@ -164,7 +122,6 @@ class Workspace(Base):
     user = relationship("User", back_populates="spaces")
     dataset_spaces = relationship("DatasetSpace", back_populates="workspace")
     user_spaces = relationship("UserSpace", back_populates="workspace")
-    roles = relationship("Role", back_populates="workspace")
 
 
 class UserSpace(Base):

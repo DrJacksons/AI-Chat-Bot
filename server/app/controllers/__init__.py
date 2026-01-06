@@ -4,7 +4,6 @@ from .workspace import WorkspaceController
 from .logs import LogsController
 from .conversation import ConversationController
 from .department import DepartmentController
-from .role import RoleController
 
 
 __all__ = [
@@ -15,5 +14,4 @@ __all__ = [
     "LogsController",
     "ConversationController",
     "DepartmentController",
-    "RoleController",
 ]

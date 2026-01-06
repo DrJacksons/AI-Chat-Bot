@@ -20,7 +20,6 @@ class UserInfo(BaseModel):
     id: UUID4 = Field(..., example="a3b8f042-1e16-4f0a-a8f0-421e16df0a2f")
     department: DepartmentBase = Field(...)
     space: SpaceBase = Field(...)
-    roles: List[str] = Field(default_factory=list)
     permissions: List[str] = Field(default_factory=list)
     features: Dict[str, Any] | None
 

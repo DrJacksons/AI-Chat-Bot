@@ -139,8 +139,8 @@ def create_app() -> FastAPI:
         title="AI Chat Server",
         description="AI Chat Backend server",
         version="1.0.0",
-        # docs_url=None if config.ENVIRONMENT == "production" else "/docs",
-        # redoc_url=None if config.ENVIRONMENT == "production" else "/redoc",
+        docs_url=None if config.ENVIRONMENT == "production" else "/docs",
+        redoc_url=None if config.ENVIRONMENT == "production" else "/redoc",
         dependencies=[Depends(Logging)],
         middleware=make_middleware(),
     )

@@ -26,6 +26,7 @@ async def create_department(
         settings=request.settings
     )
 
+
 @department_router.get("/{department_id}", response_model=DepartmentBase)
 async def get_department(
     department_id: UUID,
@@ -33,6 +34,7 @@ async def get_department(
     user: User = Depends(get_current_user),
 ):
     return await department_controller.repository.get_by_id(department_id)
+
 
 @department_router.patch("/{department_id}", response_model=DepartmentBase)
 async def update_department(
@@ -47,6 +49,7 @@ async def update_department(
         **request.dict(exclude_unset=True)
     )
 
+
 @department_router.delete("/{department_id}", status_code=204)
 async def delete_department(
     department_id: UUID,
@@ -55,6 +58,7 @@ async def delete_department(
 ):
     # TODO: Add permission check
     await department_controller.delete_department(department_id)
+
 
 @department_router.post("/{department_id}/users/{user_id}", status_code=201)
 async def add_user_to_department(
@@ -66,6 +70,7 @@ async def add_user_to_department(
     # TODO: Add permission check
     await department_controller.add_user(department_id, user_id)
 
+
 @department_router.delete("/{department_id}/users/{user_id}", status_code=204)
 async def remove_user_from_department(
     department_id: UUID,
@@ -75,6 +80,7 @@ async def remove_user_from_department(
 ):
     # TODO: Add permission check
     await department_controller.remove_user(department_id, user_id)
+
 
 @department_router.get("/{department_id}/users", response_model=List[UserResponse])
 async def get_department_users(

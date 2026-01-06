@@ -1,10 +1,10 @@
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import select, delete
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from server.app.models import Department, User, UserDepartment
+from server.app.models import Department, User
 from server.core.repository import BaseRepository
 from server.core.database import Propagation, Transactional
 
@@ -62,22 +62,22 @@ class DepartmentRepository(BaseRepository[Department]):
         """
         Add a user to the department.
         """
-        # Check if department exists
         department = await self.get_by_id(department_id)
         if not department:
             return False
 
-        # Check if relation already exists
-        stmt = select(UserDepartment).where(
-            UserDepartment.department_id == department_id,
-            UserDepartment.user_id == user_id
+        result = await self.session.execute(
+            select(User).where(User.id == user_id)
         )
-        result = await self.session.execute(stmt)
-        if result.scalars().first():
-            return False # Already exists
+        user = result.scalars().first()
+        if not user:
+            return False
 
-        user_dept = UserDepartment(department_id=department_id, user_id=user_id)
-        self.session.add(user_dept)
+        if user.department_id == department_id:
+            return False
+
+        user.department_id = department_id
+        self.session.add(user)
         return True
 
     @Transactional(propagation=Propagation.REQUIRED)
@@ -85,17 +85,22 @@ class DepartmentRepository(BaseRepository[Department]):
         """
         Remove a user from the department.
         """
-        stmt = delete(UserDepartment).where(
-            UserDepartment.department_id == department_id,
-            UserDepartment.user_id == user_id
+        result = await self.session.execute(
+            select(User).where(
+                User.id == user_id,
+                User.department_id == department_id,
+            )
         )
-        await self.session.execute(stmt)
+        user = result.scalars().first()
+        if user:
+            user.department_id = None
+            self.session.add(user)
 
     async def get_users(self, department_id: UUID) -> List[User]:
         """
         Get all users in a department.
         """
-        stmt = select(User).join(UserDepartment).where(UserDepartment.department_id == department_id)
+        stmt = select(User).where(User.department_id == department_id)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 

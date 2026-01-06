@@ -30,6 +30,7 @@ class CodeGenerator:
             self._context.logger.log(f"Using Prompt: {prompt}")
 
             # Generate the code
+            # self._context.config.llm.call(prompt, memory)  然后对python代码进行清洗
             code = self._context.config.llm.generate_code(prompt, self._context)
             # Store the original generated code (for logging purposes)
             self._context.last_code_generated = code

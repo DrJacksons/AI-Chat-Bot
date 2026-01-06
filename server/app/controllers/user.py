@@ -26,13 +26,20 @@ class UserController(BaseController[User]):
         return await self.user_repository.get_by_email(email)
 
     async def me(self) -> UserInfo:
-        users = await self.get_all(limit=1, join_={"departments", "roles"})
+        users = await self.get_all(limit=1, join_={"departments", "permissions"})
         if not users:
             raise NotFoundException(
                 "No user found. Please restart the server and try again"
             )
 
         user = users[0]
+
+        department = getattr(user, "department", None)
+        if department is None:
+            raise NotFoundException("No department found for the user")
+        department_base = DepartmentBase(
+            id=department.id, name=department.name, description=department.description
+        )
 
         user_workspaces = await self.space_repository.get_user_workspaces(user)
         space = user_workspaces[0] if user_workspaces else None
@@ -44,24 +51,9 @@ class UserController(BaseController[User]):
 
         space_base = SpaceBase(id=space.id, name=space.name)
 
-        department = (
-            user.departments[0] if getattr(user, "departments", None) else None
-        )
-        if department is None:
-            raise NotFoundException("No department found for the user")
-        department_base = DepartmentBase(
-            id=department.id, name=department.name, description=department.description
-        )
-
-        roles = [role.name for role in getattr(user, "roles", [])]
         permissions = []
-        if getattr(user, "roles", None):
-            seen = set()
-            for role in user.roles:
-                for p in getattr(role, "permissions", []):
-                    if p.code not in seen:
-                        seen.add(p.code)
-                        permissions.append(p.code)
+        if getattr(user, "permission", None):
+            permissions.append(user.permission.code)
 
         return UserInfo(
             email=user.email,
@@ -69,28 +61,17 @@ class UserController(BaseController[User]):
             id=user.id,
             department=department_base,
             space=space_base,
-            roles=roles,
             permissions=permissions,
             features=user.features,
         )
-    
+
     @Transactional(propagation=Propagation.REQUIRED_NEW)
     async def update_features(self, user_id, features):
         user = await self.user_repository.get_by_id(user_id)
         if not user:
             raise NotFoundException(
                 "No user found. Please restart the server and try again"
-            )        
+            )
 
         user.features = features
         return user.features
-
-    @Transactional(propagation=Propagation.REQUIRED)
-    async def assign_role(self, user_id: str, role_id: str, workspace_id: str) -> None:
-        success = await self.user_repository.add_role(user_id, role_id, workspace_id)
-        if not success:
-            raise BadRequestException("Role already assigned to user in this workspace")
-
-    @Transactional(propagation=Propagation.REQUIRED)
-    async def remove_role(self, user_id: str, role_id: str, workspace_id: str) -> None:
-        await self.user_repository.remove_role(user_id, role_id, workspace_id)

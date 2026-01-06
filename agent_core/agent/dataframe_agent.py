@@ -5,9 +5,10 @@ from typing import List, Optional, Union, Any
 from agent_core.agent.base import Agent
 from agent_core.agent.dataframe_state import AgentState
 from agent_core.llm.schema import Message
+from agent_core.sandbox import Sandbox
 from data_inteligence.dataframe import DataFrame, VirtualDataFrame
 from data_inteligence.code_core.code_generation import CodeGenerator
-from data_inteligence.code_core.response.error import ErrorResponse
+from data_inteligence.code_core.response import ResponseParser, ErrorResponse
 from data_inteligence.exceptions import (
     CodeExecutionError,
     InvalidLLMOutputType,
@@ -21,6 +22,7 @@ class DataFrameAgent(Agent):
             Union[DataFrame, VirtualDataFrame], List[Union[DataFrame, VirtualDataFrame]]
         ],
         memory_size: Optional[int] = 10,
+        sandbox: Optional[Sandbox] = None,
         **kwargs):
         super().__init__(name="DataframeAgent", 
         system_message="你是一个基于Dataframe的Agent，用于处理Dataframe（数据分析）相关的任务。", 
