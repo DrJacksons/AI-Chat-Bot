@@ -1,5 +1,6 @@
 import os
-import shutil
+import time
+from pathlib import Path
 from typing import List
 
 import pandas as pd
@@ -18,7 +19,6 @@ from server.app.schemas.responses.users import UserInfo
 # from server.app.utils.memory import prepare_conv_memory
 from server.core.controller import BaseController
 from server.core.database.transactional import Propagation, Transactional
-from server.core.utils.dataframe import load_df
 from server.core.utils.json_encoder import jsonable_encoder
 from server.core.utils.response_parser import JsonResponseParser
 from server.setting import config as env_config
@@ -49,6 +49,7 @@ class ChatController(BaseController[User]):
 
     @Transactional(propagation=Propagation.REQUIRED)
     async def chat(self, user: UserInfo, chat_request: ChatRequest) -> ChatResponse:
+        from data_inteligence.data_loader.loader import DatasetLoader
         datasets: List[Dataset] = await self.space_repository.get_space_datasets(
             chat_request.workspace_id
         )
@@ -70,43 +71,30 @@ class ChatController(BaseController[User]):
 
         connectors = []
         for dataset in datasets:
+            # load dataset：分两种情况。1、有description或field_descriptions，加载SemanticLayer数据集。2、没有，直接从文件或数据库中加载。
             config = dataset.connector.config
-            df = pd.read_csv(config["file_path"])
-            # connector = PandasConnector(
-            #     {"original_df": df},
-            #     name=dataset.name,
-            #     description=dataset.description,
-            #     custom_head=(load_df(dataset.head) if dataset.head else None),
-            #     field_descriptions=dataset.field_descriptions,
-            # )
-            if dataset.description:
-                df.schema.description = dataset.description
+            if dataset.connector.type == "CSV":
+                # 读取schema.yaml文件加载Dataframe数据
+                file_path = Path(find_project_root()) / config["file_path"]
+                loader = DatasetLoader.create_loader_from_path(file_path.parent)
+                df = loader.load()
             connectors.append(df)
 
-        path_plot_directory = find_project_root() + "/exports/" + str(conversation_id)
-
+        # print(f"一共加载了{len(connectors)}个数据集")
         config = {
-            "enable_cache": False,
-            "response_parser": JsonResponseParser,
-            "save_charts": True,
-            "save_charts_path": path_plot_directory,
+            "enable_cache": False
         }
-
         if env_config.OPENAI_API_KEY:
             llm = OpenAIChatModel(env_config.OPENAI_API_KEY)
             config["llm"] = llm
 
-        agent = DataFrameAgent(connectors, config=config)
-
-        # add to log get log id
+        agent = DataFrameAgent(connectors, config=config, response_parser=JsonResponseParser)
         
         if memory:
             agent.context.memory = memory
 
-        response = agent.chat(chat_request.query)
-
-        if os.path.exists(path_plot_directory):
-            shutil.rmtree(path_plot_directory)
+        start_time = time.time()
+        response = agent.follow_up(chat_request.query)
 
         if isinstance(response, str) and (
             response.startswith("Unfortunately, I was not able to")
@@ -118,9 +106,8 @@ class ChatController(BaseController[User]):
                     "value": "I'm sorry, I wasn't able to fully understand your question. Could you please rephrase it or provide more details?",
                 }
             ]
-
-        summary = agent.pipeline.query_exec_tracker.get_summary()
-        log = await self.logs_repository.add_log(user.id, "", summary, chat_request.query, summary['success'], summary['execution_time'])
+        execution_time = round(time.time() - start_time, 3)
+        log = await self.logs_repository.add_log(user.id, [{}], chat_request.query, execution_time=execution_time)
 
         response = jsonable_encoder([response])
         conversation_message = await self.conversation_repository.add_conversation_message(

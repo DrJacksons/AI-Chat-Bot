@@ -52,7 +52,6 @@ class DatasetLoader(ABC):
         """
         Factory method to create the appropriate loader based on the dataset type.
         """
-        dataset_path = dataset_path.replace("_", "-")
         schema = cls._read_schema_file(dataset_path)
         return DatasetLoader.create_loader_from_schema(schema, dataset_path)
 

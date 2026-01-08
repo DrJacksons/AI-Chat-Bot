@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from .chat import chat_router
 
-chat_router = APIRouter()
-chat_router.include_router(chat_router, tags=["Chat"])
+chats_router = APIRouter()
+chats_router.include_router(chat_router, tags=["Chat"])
 
-__all__ = ["chat_router"]
+__all__ = ["chats_router"]

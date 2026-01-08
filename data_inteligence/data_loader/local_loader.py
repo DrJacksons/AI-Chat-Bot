@@ -16,7 +16,6 @@ class LocalDatasetLoader(DatasetLoader):
     """
     Loader for local datasets (CSV, Parquet, XLSX/XLS).
     """
-
     def __init__(self, schema: SemanticLayerSchema, dataset_path: str):
         super().__init__(schema, dataset_path)
         self._query_builder: LocalQueryBuilder = LocalQueryBuilder(schema, dataset_path)

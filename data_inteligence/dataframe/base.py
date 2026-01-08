@@ -54,7 +54,7 @@ class DataFrame(pd.DataFrame):
             self._table_name = _table_name
 
         self._column_hash = self._calculate_column_hash()
-        self.schema = _schema or DataFrame.get_default_schema()
+        self.schema = _schema or DataFrame.get_default_schema(self)
         self.path = _path
         self._agent: Optional[DataFrameAgent] = None
 
@@ -104,9 +104,9 @@ class DataFrame(pd.DataFrame):
         return self.head()
 
     @staticmethod
-    def get_column_type(dolumn_dtype) -> Optional[str]:
+    def get_column_type(column_dtype) -> Optional[str]:
         """根据数据框列的dtype返回对应的类型"""
-        if pd.api.types.is_string_dtype(dolumn_dtype):
+        if pd.api.types.is_string_dtype(column_dtype):
             return "string"
         elif pd.api.types.is_integer_dtype(column_dtype):
             return "integer"
@@ -120,7 +120,7 @@ class DataFrame(pd.DataFrame):
             return None
 
     @classmethod
-    def get_default_schema(cls, dataframe: DataFrame) -> SemanticLayerSchema:
+    def get_default_schema(cls, dataframe) -> SemanticLayerSchema:
         columns_list = [
             Column(name=str(name), type=DataFrame.get_column_type(dtype))
             for name, dtype in dataframe.dtypes.items()

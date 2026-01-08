@@ -8,6 +8,9 @@ from server.app.controllers import (
     WorkspaceController,
     AuthController,
     DepartmentController,
+    DatasetController,
+    ConversationController,
+    ChatController,
 )
 from server.app.models import (
     Dataset,

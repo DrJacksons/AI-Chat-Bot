@@ -2,6 +2,8 @@ from server.app.models import Connector, ConnectorType, Dataset, DatasetSpace
 from server.core.repository import BaseRepository
 from uuid import UUID
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
+from typing import List, Optional
 
 
 class DatasetRepository(BaseRepository[Dataset]):
@@ -17,6 +19,7 @@ class DatasetRepository(BaseRepository[Dataset]):
         config,
         head: dict,
         description: str = "",
+        field_descriptions: List[dict] = [{}],
     ):
         connector = Connector(type=connector_type.value, config=config, user_id=user_id)
         self.session.add(connector)
@@ -28,12 +31,14 @@ class DatasetRepository(BaseRepository[Dataset]):
             head=head,
             user_id=user_id,
             connector_id=connector.id,
-            description=description
+            description=description,
+            field_descriptions={"columns": field_descriptions},
         )
 
         self.session.add(dataset)
         await self.session.flush()
         return dataset
+
 
     async def get_all_by_workspace_id(self, workspace_id: UUID):
         result = await self.session.execute(
@@ -49,3 +54,15 @@ class DatasetRepository(BaseRepository[Dataset]):
         await self.session.refresh(dataset)
 
         return dataset
+
+
+    async def get_user_datasets(self, user_id: int):
+        result = await self.session.execute(
+            select(Dataset)
+            .options(
+                joinedload(Dataset.connector)
+            )
+            .where(Dataset.user_id == user_id)
+            .order_by(Dataset.created_at.desc())
+        )
+        return result.unique().scalars().all()

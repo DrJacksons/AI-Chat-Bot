@@ -1,3 +1,4 @@
+import copy
 from typing import Optional, List, Dict, Union, Iterator
 from agent_core.agent.base import Agent
 from agent_core.tools.base import BaseTool

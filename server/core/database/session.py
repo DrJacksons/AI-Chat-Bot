@@ -18,10 +18,25 @@ def reset_session_context(context: Token) -> None:
     session_context.reset(context)
 
 # 定义“写”数据库引擎和“读”数据库引擎（读写分离）
-engines = {
-    "writer": create_async_engine(config.POSTGRES_URL, pool_recycle=3600),
-    "reader": create_async_engine(config.POSTGRES_URL, pool_recycle=3600, echo=True),
-}
+if config.DATABASE_SCHEMA:
+    engines = {
+        "writer": create_async_engine(
+            config.DATABASE_URL,
+            pool_recycle=3600,
+            connect_args={"server_settings": {"search_path": config.DATABASE_SCHEMA}},
+        ),
+        "reader": create_async_engine(
+            config.DATABASE_URL,
+            pool_recycle=3600,
+            echo=bool(config.SHOW_SQL_ALCHEMY_QUERIES),
+            connect_args={"server_settings": {"search_path": config.DATABASE_SCHEMA}},
+        ),
+    }
+else:
+    engines = {
+        "writer": create_async_engine(config.DATABASE_URL, pool_recycle=3600),
+        "reader": create_async_engine(config.DATABASE_URL, pool_recycle=3600, echo=True),
+    }
 
 class RoutingSession(Session):
     # 查询类操作走只读连接，写入类操作走写连接
@@ -57,4 +72,10 @@ async def get_session():
 
 
 # 定义数据库模型的基类
-Base = declarative_base()
+if config.DATABASE_SCHEMA:
+    print(f"Using schema: {config.DATABASE_SCHEMA}")
+    from sqlalchemy import MetaData
+    metadata = MetaData(schema=config.DATABASE_SCHEMA)
+    Base = declarative_base(metadata=metadata)
+else:
+    Base = declarative_base()

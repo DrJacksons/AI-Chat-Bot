@@ -13,7 +13,7 @@ class LogResponse(BaseModel):
     json_log: Optional[dict]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class LogsResponse(BaseModel):
@@ -24,7 +24,7 @@ class LogsResponse(BaseModel):
     success: Optional[bool]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class LogsResponseModel(BaseModel):

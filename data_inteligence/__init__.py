@@ -181,3 +181,36 @@ def create(
     return loader.load()
 
 
+def load(dataset_path: str) -> DataFrame:
+    """
+    Load data based on the provided dataset path.
+
+    Args:
+        dataset_path (str): Path in the format 'my-org/dataset_name'.
+
+    Returns:
+        DataFrame: A new PandasAI DataFrame instance with loaded data.
+    """
+
+    # Validate the dataset path
+    get_validated_dataset_path(dataset_path)
+
+    dataset_full_path = os.path.join(find_project_root(), "datasets", dataset_path)
+
+    local_dataset_exists = os.path.exists(dataset_full_path)
+
+    if not local_dataset_exists:
+        raise ValueError("Dataset not found!")
+
+    loader = DatasetLoader.create_loader_from_path(dataset_path)
+    df = loader.load()
+
+    message = (
+        "Dataset loaded successfully."
+        if local_dataset_exists
+        else "Dataset fetched successfully from the remote server."
+    )
+    # Printed to display info to the user
+    print(message)
+
+    return df

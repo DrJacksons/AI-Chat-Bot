@@ -44,11 +44,11 @@ class AuthController(BaseController[User]):
         if not user:
             raise BadRequestException("Invalid credentials")
 
-        if not PasswordHandler.verify(user.password, password):
+        if not PasswordHandler.verify(password, user.password):
             raise BadRequestException("Invalid credentials")
 
         return Token(
-            access_token=JWTHandler.encode(payload={"user_id": user.id}),
+            access_token=JWTHandler.encode(payload={"user_id": str(user.id)}),
             refresh_token=JWTHandler.encode(payload={"sub": "refresh_token"}),
         )
 

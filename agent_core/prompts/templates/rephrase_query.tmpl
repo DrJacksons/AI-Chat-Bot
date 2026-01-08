@@ -1,8 +1,16 @@
 {% for df in context.dfs %}{% set index = loop.index %}{% include 'shared/dataframe.tmpl' with context %}{% endfor %}
 
+<business_description>
+{% for df in context.dfs %}{% if df.schema and df.schema.description %}{{ df.schema.description }}{% endif %}{% endfor %}
+</business_description>
+
 <conversation>
 {{context.memory.get_conversation()}}
 </conversation>
+
+<datetime>
+{{ current_date }}
+</datetime>
 
 Use the provided dataframe and conversation to return the rephrased sentence of "{{query}}” in order to obtain more accurate and comprehensive responses without any explanations.
 

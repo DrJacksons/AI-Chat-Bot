@@ -8,4 +8,4 @@ class DepartmentBase(BaseModel):
     description: Optional[str] = Field(None, example="默认工作空间（admin）")
 
     class Config:
-        orm_mode = True
+        from_attributes = True

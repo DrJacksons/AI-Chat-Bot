@@ -16,7 +16,7 @@ class DatasetModel(BaseModel):
     filterable_columns: Optional[dict]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class WorkspaceDatasetsResponseModel(BaseModel):
     datasets: List[DatasetModel]

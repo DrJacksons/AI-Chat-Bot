@@ -25,6 +25,9 @@ dependencies = [
     "uvicorn>=0.38.0",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["server/test"]
+python_files = ["test_*.py", "*_test.py"]
 
 [[tool.uv.index]]
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
@@ -33,4 +36,5 @@ default = true
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
 ]

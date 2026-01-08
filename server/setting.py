@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional, Any, Dict
 
-from pydantic.v1 import BaseSettings, PostgresDsn
+from pydantic.v1 import BaseSettings
 
 
 class EnvironmentType(str, Enum):
@@ -38,9 +38,11 @@ class Config(BaseConfig):
     DEBUG: int = 0
     DEFAULT_LOCALE: str = "en_US"
     ENVIRONMENT: str = EnvironmentType.DEVELOPMENT
-    POSTGRES_URL: PostgresDsn = (
+    DATABASE_URL: str = (
         "postgresql+asyncpg://test:testqwer123@127.0.0.1:5432/chatbot"
     )
+    # 数据库Schema（如果有）
+    DATABASE_SCHEMA: str = ""
     # Redis 配置（嵌套配置类）
     REDIS: RedisConfig = RedisConfig(
         HOST="127.0.0.1",
@@ -57,6 +59,8 @@ class Config(BaseConfig):
     EMAIL: str = "admin@wenshuai.com"
     PASSWORD: str = "qwer@123"
     DEFAULT_SPACE: str = "admin"
+    # 用户空间下的数据集文件夹容量大小限制
+    MAX_DATASET_SIZE: int = 1024 * 1024 * 1024  # 1GB
 
 
 config: Config = Config()

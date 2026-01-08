@@ -1,7 +1,9 @@
 import os
 import re
+import hashlib
 from io import BytesIO
 from typing import Union
+from pathlib import Path
 
 from .sql_sanitizer import sanitize_file_name
 
@@ -98,3 +100,20 @@ def get_table_name_from_path(filepath: Union[str, BytesIO]) -> str:
         if isinstance(filepath, str)
         else "table_from_bytes"
     )
+
+
+def calculate_md5(file) -> str:
+    """计算上传文件的MD5哈希值"""
+    md5_hash = hashlib.md5()
+    if isinstance(file, str) or isinstance(file, Path):
+        # 如果是文件路径
+        file_path = str(file)
+        with open(file_path, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                md5_hash.update(chunk)
+    else:
+        file.file.seek(0)  # 确保从文件开头读取
+        for chunk in iter(lambda: file.file.read(4096), b""):
+            md5_hash.update(chunk)
+        file.file.seek(0)  # 重置文件指针
+    return md5_hash.hexdigest()

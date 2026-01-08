@@ -9,7 +9,7 @@ class ConversationMessageBase(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ConversationMessageDTO(ConversationMessageBase):
@@ -30,7 +30,7 @@ class UserConversationBase(BaseModel):
     messages: List[ConversationMessageBase]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ConversationList(BaseModel):
