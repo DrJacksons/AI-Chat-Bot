@@ -3,6 +3,7 @@ from pydantic import UUID4, BaseModel, Field
 
 from server.app.schemas.responses.department import DepartmentBase
 from server.app.schemas.responses.space import SpaceBase
+from server.app.schemas.responses.permission import PermissionBase
 
 
 class UserResponse(BaseModel):
@@ -20,7 +21,7 @@ class UserInfo(BaseModel):
     id: UUID4 = Field(..., example="a3b8f042-1e16-4f0a-a8f0-421e16df0a2f")
     department: DepartmentBase = Field(...)
     space: SpaceBase = Field(...)
-    permissions: List[str] = Field(default_factory=list)
+    permissions: PermissionBase = Field(...)
     features: Dict[str, Any] | None
 
     class Config:
@@ -34,6 +35,7 @@ class WorkspaceUserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class WorkspaceUsersResponse(BaseModel):
     users: List[WorkspaceUserResponse]

@@ -12,6 +12,7 @@ from server.setting import config
 
 
 class AuthBackend(AuthenticationBackend):
+    """OAuth 2.0 认证后端"""
     async def authenticate(
         self, conn: HTTPConnection
     ) -> Tuple[bool, Optional[CurrentUser]]:

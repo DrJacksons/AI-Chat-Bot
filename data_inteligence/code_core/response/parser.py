@@ -10,21 +10,21 @@ from .string import StringResponse
 
 
 class ResponseParser:
-    def parse(self, result: dict, last_code_executed: str = None) -> BaseResponse:
+    def parse(self, result: dict) -> BaseResponse:
         self._validate_response(result)
-        return self._generate_response(result, last_code_executed)
+        return self._generate_response(result)
 
-    def _generate_response(self, result: dict, last_code_executed: str = None):
+    def _generate_response(self, result: dict, error: str = None):
         if result["type"] == "number":
-            return NumberResponse(result["value"], last_code_executed)
+            return NumberResponse(result["value"], error)
         elif result["type"] == "string":
-            return StringResponse(result["value"], last_code_executed)
+            return StringResponse(result["value"], error)
         elif result["type"] == "dataframe":
-            return DataFrameResponse(result["value"], last_code_executed)
+            return DataFrameResponse(result["value"], error)
         elif result["type"] == "plot":
-            return ChartResponse(result["value"], last_code_executed)
+            return ChartResponse(result["value"], error)
         else:
-            raise InvalidOutputValueMismatch(f"Invalid output type: {result['type']}")
+            raise TypeError(f"Invalid output type: {result['type']}")
 
     def _validate_response(self, result: dict):
         if (

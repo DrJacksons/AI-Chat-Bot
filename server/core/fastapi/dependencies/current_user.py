@@ -4,6 +4,7 @@ from server.app.controllers.user import UserController
 from server.app.schemas.responses.users import UserInfo
 from server.app.schemas.responses.space import SpaceBase
 from server.app.schemas.responses.department import DepartmentBase
+from server.app.schemas.responses.permission import PermissionBase
 from server.core.exceptions import NotFoundException
 from server.core.factory import Factory
 from server.core.fastapi.dependencies.authentication import AuthenticationRequiredException
@@ -64,9 +65,10 @@ async def get_current_user(
 
     space_base = SpaceBase(id=space.id, name=space.name)
 
-    permissions: list[str] = []
-    if getattr(user, "permission", None):
-        permissions.append(user.permission.code)
+    permission_base = PermissionBase(
+        id=user.permission.id, code=user.permission.code, resource=user.permission.resource,
+        action=user.permission.action, description=user.permission.description
+    )
 
     return UserInfo(
         email=user.email,
@@ -74,6 +76,6 @@ async def get_current_user(
         id=user.id,
         department=department_base,
         space=space_base,
-        permissions=permissions,
+        permissions=permission_base,
         features=user.features,
     )

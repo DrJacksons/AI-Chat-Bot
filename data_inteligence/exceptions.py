@@ -34,3 +34,11 @@ class InvalidLLMOutputType(Exception):
     Args:
         Exception (Exception): InvalidLLMOutputType
     """
+
+class NoCodeFoundError(Exception):
+    """
+    Raised when no code is found in the response.
+
+    Args:
+        Exception (Exception): NoCodeFoundError
+    """

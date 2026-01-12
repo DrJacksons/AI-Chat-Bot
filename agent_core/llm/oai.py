@@ -1,9 +1,20 @@
-from typing import List, Dict, Any, Optional, Union, AsyncIterator
+from typing import List, Dict, Any, Optional, Union, Tuple, AsyncIterator
 import openai
 from .base import BaseChatModel
 
 
 class OpenAIChatModel(BaseChatModel):
+    temperature: float = 0
+    max_tokens: int = 10000
+    top_p: float = 1
+    frequency_penalty: float = 0
+    presence_penalty: float = 0.6
+    n: int = 1
+    stop: Optional[str] = None
+    request_timeout: Union[float, Tuple[float, float], Any, None] = None
+    max_retries: int = 2
+    seed: Optional[int] = None
+
     """使用 OpenAI Python SDK v2.0+ 实现的 ChatModel 子类。"""
     def __init__(self, model: str, api_key: str, base_url: Optional[str] = None, **kwargs):
         """
@@ -26,7 +37,25 @@ class OpenAIChatModel(BaseChatModel):
         self.client = openai.AsyncOpenAI(**client_kwargs)
         print(f"Initialized OpenAIChatModel client for model: {self.model}")
 
-    async def _chat_stream(self, messages: List[Dict[str, str]], **kwargs) -> AsyncIterator[str]:
+    @property
+    def _default_params(self) -> Dict[str, Any]:
+        """Get the default parameters for calling OpenAI API."""
+        params: Dict[str, Any] = {
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "frequency_penalty": self.frequency_penalty,
+            "presence_penalty": self.presence_penalty,
+            "seed": self.seed,
+            "stop": self.stop,
+            "n": self.n,
+        }
+
+        if self.max_tokens is not None:
+            params["max_tokens"] = self.max_tokens
+
+        return params
+
+    async def _chat_stream(self, messages: List[Dict[str, str]]) -> AsyncIterator[str]:
         """
         使用 OpenAI SDK 实现流式聊天。
         """
@@ -36,7 +65,7 @@ class OpenAIChatModel(BaseChatModel):
                 model=self.model,
                 messages=messages,
                 stream=True, # 关键参数，启用流式
-                **kwargs   # 传递其他可能的参数，如 temperature, max_tokens 等
+                **self._default_params   # 传递其他可能的参数，如 temperature, max_tokens 等
             )
             
             # 异步迭代流式响应
@@ -50,7 +79,7 @@ class OpenAIChatModel(BaseChatModel):
             print(f"Error during OpenAI stream chat: {e}")
             yield f"[Error]: {str(e)}"
 
-    async def _chat_no_stream(self, messages: List[Dict[str, str]], **kwargs) -> str:
+    async def _chat_no_stream(self, messages: List[Dict[str, str]]) -> str:
         """
         使用 OpenAI SDK 实现非流式聊天。
         """
@@ -60,7 +89,7 @@ class OpenAIChatModel(BaseChatModel):
                 model=self.model,
                 messages=messages,
                 stream=False, # 明确禁用流式
-                **kwargs     # 传递其他可能的参数
+                **self._default_params     # 传递其他可能的参数
             )
             # 提取并返回完整回复
             content = response.choices[0].message.content
@@ -74,8 +103,7 @@ class OpenAIChatModel(BaseChatModel):
         self,
         messages: List[Dict[str, str]],
         functions: List[Dict[str, Any]],
-        function_call: Union[str, Dict[str, str], None] = None,
-        **kwargs
+        function_call: Union[str, Dict[str, str], None] = None
     ) -> Dict[str, Any]:
         """
         使用 OpenAI SDK 实现带 Function Calling 的聊天。
@@ -90,7 +118,7 @@ class OpenAIChatModel(BaseChatModel):
                 "tools": functions, # OpenAI 新版使用 tools 和 tool_choice
                 "tool_choice": function_call if function_call is not None else "auto",
                 "stream": False,
-                **kwargs
+                **self._default_params
             }
             
             # 如果没有显式提供 tool_choice，则移除它以便让 API 默认为 "auto"
@@ -118,3 +146,7 @@ class OpenAIChatModel(BaseChatModel):
         except Exception as e:
             print(f"Error during OpenAI function call chat: {e}")
             return {"content": f"[Error]: {str(e)}", "function_call": None, "tool_calls": None}
+
+    @property
+    def type(self) -> str:
+        return "openai"

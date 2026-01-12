@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from sqlalchemy import select
 
 from server.app.models import Permission
@@ -30,6 +30,6 @@ class PermissionRepository(BaseRepository[Permission]):
             description=description,
         )
         self.session.add(permission)
+        # Flush is handled by Transactional decorator usually, but explicit here is fine if not using Transactional on repo methods
         await self.session.flush()
         return permission
-

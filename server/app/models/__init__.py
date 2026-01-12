@@ -160,6 +160,7 @@ class ConversationMessage(Base):
     created_at = Column(DateTime, default=datetime.datetime.now)
     query = Column(String)
     response = Column(JSON, nullable=True)
+    intent = Column(String, nullable=True)
     code_generated = Column(String, nullable=True)
     label = Column(String, nullable=True)
     log_id = Column(UUID(as_uuid=True), ForeignKey("logs.id"))

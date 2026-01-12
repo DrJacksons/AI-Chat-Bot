@@ -20,8 +20,7 @@ class BaseChatModel(ABC):
         self.model = model
         self.api_key = api_key
         # 将其他配置参数存储起来，供子类实现时使用
-        self.config = kwargs 
-        print(f"Initialized ChatModel with model: {self.model}")
+        self.config = kwargs
 
     async def chat(
         self,
@@ -59,7 +58,7 @@ class BaseChatModel(ABC):
         else:
             raise ValueError("prompt_or_messages must be either a string or a list of message dictionaries.")
 
-        print(f"Calling chat with messages: {messages}, stream: {stream}, has_functions: {functions is not None}")
+        # print(f"Calling chat with messages: {messages}, stream: {stream}, has_functions: {functions is not None}")
 
         # 处理函数调用参数
         if functions is not None:
@@ -67,34 +66,29 @@ class BaseChatModel(ABC):
             return await self._chat_with_functions(
                 messages=messages,
                 functions=functions,
-                function_call=function_call,
-                generate_cfg=kwargs,
+                function_call=function_call
             )
         else:
             # 普通聊天功能
             if stream:
                 return self._chat_stream(
-                    messages=messages,
-                    generate_cfg=kwargs,
+                    messages=messages
                 )
             else:
                 return await self._chat_no_stream(
-                    messages=messages,
-                    generate_cfg=kwargs,
+                    messages=messages
                 )
 
     @abstractmethod
     async def _chat_stream(
         self,
-        messages: List[Dict[str, str]],
-        generate_cfg: dict,
+        messages: List[Dict[str, str]]
     ) -> AsyncIterator[str]:
         """
         异步流式聊天方法。
 
         Args:
             messages (List[Dict[str, str]]): 包含消息的列表，每个消息都是一个字典，包含 "role" 和 "content" 键。
-            generate_cfg (dict): 生成配置参数，例如温度、top_p 等。
 
         Returns:
             AsyncIterator[str]: 异步迭代器，每次返回模型生成的新token。
@@ -104,15 +98,13 @@ class BaseChatModel(ABC):
     @abstractmethod
     async def _chat_no_stream(
         self,
-        messages: List[Dict[str, str]],
-        generate_cfg: dict,
+        messages: List[Dict[str, str]]
     ) -> str:
         """
         非流式聊天方法。
 
         Args:
             messages (List[Dict[str, str]]): 包含消息的列表，每个消息都是一个字典，包含 "role" 和 "content" 键。
-            generate_cfg (dict): 生成配置参数，例如温度、top_p 等。
 
         Returns:
             str: 模型生成的完整回答。
@@ -125,8 +117,7 @@ class BaseChatModel(ABC):
         self,
         messages: List[Dict[str, str]],
         functions: List[Dict[str, Any]],
-        function_call: Union[str, Dict[str, str], None],
-        generate_cfg: dict,
+        function_call: Union[str, Dict[str, str], None]
     ) -> Dict[str, Any]:
         """
         带函数调用的聊天方法。
@@ -138,7 +129,6 @@ class BaseChatModel(ABC):
                                                               "auto" 表示模型可以决定；
                                                               {"name": "my_function"} 表示强制调用特定函数；
                                                               None 表示不调用函数。
-            generate_cfg (dict): 生成配置参数，例如温度、top_p 等。
 
         Returns:
             Dict[str, Any]: 包含模型回复和潜在函数调用信息的字典。
@@ -146,6 +136,19 @@ class BaseChatModel(ABC):
         """
         raise NotImplementedError
 
+    @property
+    def type(self) -> str:
+        """
+        Return type of LLM.
+
+        Raises:
+            ValueError: Type has not been implemented
+
+        Returns:
+            str: Type of LLM a string
+
+        """
+        raise ValueError("Type has not been implemented")
 
     async def call(
         self,
@@ -166,7 +169,7 @@ class BaseChatModel(ABC):
         messages = memory.to_openai_messages() if memory else []
         messages.append({"role": "user", "content": prompt.to_string()})
         return await self.chat(
-            messages=messages,
+            prompt_or_messages=messages,
             stream=stream,
         )
         

@@ -1,20 +1,13 @@
 <tables>
 {% for df in context.dfs %}
-{% set index = loop.index %}{% include 'shared/dataframe.tmpl' with context %}
+{% include 'shared/dataframe.tmpl' with context %}
 {% endfor %}
 </tables>
 
-{% if context.skills_manager.has_skills() %}
-{{context.skills_manager.prompt_display()}}
-{% else %}
-You are already provided with the following functions that you can call:
-{% endif %}
-<function>
-def execute_sql_query(sql_query: str) -> pd.Dataframe
-    """This method connects to the database, executes the sql query and returns the dataframe"""
-</function>
+{% include 'shared/sql_functions.tmpl' with context %}
 
-{% if last_code_generated != "" and context.memory.count() > 0 %}
+{% if last_code_generated and context.memory.count() > 0 %}
+Last code generated:
 {{ last_code_generated }}
 {% else %}
 Update this initial code:
@@ -29,12 +22,10 @@ import pandas as pd
 {% endif %}
 {% include 'shared/vectordb_docs.tmpl' with context %}
 {{ context.memory.get_last_message() }}
-Variable `dfs: list[pd.DataFrame]` is already declared.
 
-At the end, declare "result" variable as a dictionary of type and value.
-{% if viz_lib %}
-If you are asked to plot a chart, use "{{viz_lib}}" for charts, save as png.
-{% endif %}
+At the end, declare "result" variable as a dictionary of type and value in the following format:
+{% include 'shared/output_type_template.tmpl' with context %}
+
 
 Generate python code and return full updated code:
 

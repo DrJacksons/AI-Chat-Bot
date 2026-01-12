@@ -169,7 +169,7 @@ class CodeCleaner:
         """
         _id = uuid.uuid4()
         chart_path = DEFAULT_CHART_DIRECTORY / f"temp_chart_{_id}.png"
-        chart_path = chart_path.replace("\\", "\\\\")
+        chart_path = str(chart_path).replace("\\", "\\\\")
         return re.sub(
             r"""(['"])([^'"]*\.png)\1""",
             lambda m: f"{m.group(1)}{chart_path}{m.group(1)}",

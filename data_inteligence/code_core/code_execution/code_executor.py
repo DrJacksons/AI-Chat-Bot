@@ -10,7 +10,7 @@ class CodeExecutor:
 
     _environment: dict
 
-    def __init__(self) -> None:
+    def __init__(self, config: Any) -> None:
         self._environment = get_environment()
 
     def add_to_env(self, key: str, value: Any) -> None:

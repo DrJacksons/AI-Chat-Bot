@@ -6,6 +6,8 @@ from data_inteligence.dataframe import DataFrame, VirtualDataFrame
 from agent_core.llm.base import BaseChatModel
 from agent_core.config import Config
 from agent_core.memory.memory import Memory
+from agent_core.skills.manager import SkillsManager
+from loguru import logger
 
 
 @dataclass
@@ -43,21 +45,10 @@ class AgentState:
         if config:
             self.config.llm = self._get_llm(self.config.llm)
         self.memory = Memory(memory_size, agent_description=description)
-        self.logger = Logger(
-            save_logs=self.config.save_logs, verbose=self.config.verbose
-        )
-        self._configure()
+        self.logger = logger.bind(name="agent")
 
-    def _configure(self):
-        """Configure paths for charts."""
-        # Add project root path if save_charts_path is default
-        Folder.create(DEFAULT_CHART_DIRECTORY)
-
-    def _get_config(self, config: Union[Config, dict, None]) -> Config:
+    def _get_config(self, config: Union[Config, dict]) -> Config:
         """Load a config to be used for queries."""
-        if config is None:
-            return ConfigManager.get()
-
         if isinstance(config, dict):
             return Config(**config)
 
@@ -72,7 +63,7 @@ class AgentState:
         self.last_prompt_id = uuid.uuid4()
 
         if self.logger:
-            self.logger.log(f"Prompt ID: {self.last_prompt_id}")
+            self.logger.info(f"Prompt ID: {self.last_prompt_id}")
 
     def reset_intermediate_values(self):
         """Resets the intermediate values dictionary."""

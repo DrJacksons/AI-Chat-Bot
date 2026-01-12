@@ -25,7 +25,7 @@ class UserController(BaseController[User]):
     async def get_by_email(self, email: str) -> User:
         return await self.user_repository.get_by_email(email)
 
-    async def me(self) -> UserInfo:
+    async def admin(self) -> UserInfo:
         users = await self.get_all(limit=1, join_={"departments", "permissions"})
         if not users:
             raise NotFoundException(

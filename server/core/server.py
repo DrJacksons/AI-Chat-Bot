@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
-from fastapi import Depends, FastAPI, Request
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -15,7 +16,6 @@ from server.app.repositories import UserRepository, DatasetRepository, Workspace
 from server.setting import config
 from server.core.database.session import session
 from server.core.exceptions import CustomException
-from server.core.fastapi.dependencies import Logging
 from server.core.fastapi.middlewares import (
     AuthBackend,
     AuthenticationMiddleware,
@@ -141,7 +141,6 @@ def create_app() -> FastAPI:
         version="1.0.0",
         docs_url=None if config.ENVIRONMENT == "production" else "/docs",
         redoc_url=None if config.ENVIRONMENT == "production" else "/redoc",
-        dependencies=[Depends(Logging)],
         middleware=make_middleware(),
     )
     init_routers(app_=app_)
@@ -149,6 +148,7 @@ def create_app() -> FastAPI:
 
     @app_.on_event("startup")
     async def on_startup():
+        load_dotenv()
         # await init_database()
         await init_user()
 

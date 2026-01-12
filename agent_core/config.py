@@ -15,7 +15,7 @@ memory_collection_name = "memory"
 class Config(BaseModel):
     save_logs: bool = True
     enable_cache: bool = False
-    max_retries: int = 3
+    max_retries: int = 2
     llm: Optional[BaseChatModel] = None
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

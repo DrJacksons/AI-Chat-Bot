@@ -6,16 +6,6 @@ from data_inteligence.helpers.response_parser import IResponseParser
 
 
 class JsonResponseParser(IResponseParser):
-    _context = None
-
-    def __init__(self, context) -> None:
-        """
-        Initialize the ResponseParser with Context from Agent
-        Args:
-            context (Context): context contains the config and logger
-        """
-        self._context = context
-
     def parse(self, result: dict) -> Any:
         """
         Parses result from the chat input
@@ -30,7 +20,7 @@ class JsonResponseParser(IResponseParser):
         if not isinstance(result, dict) or any(
             key not in result for key in ["type", "value"]
         ):
-            raise ValueError("Unsupported result format")
+            raise ValueError("Unsupported result format. Result must be a dictionary with 'type' and 'value' keys.")
 
         if result["type"] == "plot":
             return self.format_plot(result)

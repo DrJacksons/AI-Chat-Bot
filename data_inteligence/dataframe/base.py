@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Optional
 import pandas as pd
 import hashlib
 from pandas._typing import Axes, Dtype
+from data_inteligence.constants import LOCAL_SOURCE_TYPES
+from data_inteligence.helpers.dataframe_serialize import DataframeSerializer
 from data_inteligence.data_loader.semantic_layer_schema import SemanticLayerSchema, Source, Column
 
 if TYPE_CHECKING:
@@ -99,6 +101,16 @@ class DataFrame(pd.DataFrame):
             dialect = "postgres"
 
         return dialect
+    
+    def serialize_dataframe(self) -> str:
+        """
+        Serialize DataFrame to string representation.
+
+        Returns:
+            str: Serialized string representation of the DataFrame
+        """
+        dialect = self.get_dialect()
+        return DataframeSerializer.serialize(self, dialect)
 
     def get_head(self):
         return self.head()

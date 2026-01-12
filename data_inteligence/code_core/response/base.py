@@ -13,15 +13,13 @@ class BaseResponse:
         self,
         value: Any = None,
         type: str = None,
-        last_code_executed: str = None,
         error: str = None,
     ):
         """
         Initialize the BaseResponse object
 
         :param value: The value of the response
-        :param last_code_executed: The last code executed to generate the value
-        :raise ValueError: If value or last_code_executed is None
+        :raise ValueError: If value or type is None
         """
         if value is None:
             raise ValueError("Result should not be None")
@@ -30,7 +28,6 @@ class BaseResponse:
 
         self.value = value
         self.type = type
-        self.last_code_executed = last_code_executed
         self.error = error
 
     def __str__(self) -> str:

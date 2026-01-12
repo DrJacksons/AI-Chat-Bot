@@ -50,7 +50,6 @@ class Config(BaseConfig):
         DB=0,
         PASSWORD="qwer@123",
     )
-    OPENAI_API_KEY: str = None
     RELEASE_VERSION: str = "0.1.0"
     SHOW_SQL_ALCHEMY_QUERIES: int = 0
     SECRET_KEY: str = "super-secret-key"

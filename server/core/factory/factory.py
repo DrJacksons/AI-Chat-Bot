@@ -11,6 +11,7 @@ from server.app.controllers import (
     DatasetController,
     ConversationController,
     ChatController,
+    PermissionController,
 )
 from server.app.models import (
     Dataset,
@@ -19,6 +20,7 @@ from server.app.models import (
     User,
     UserConversation,
     Logs,
+    Permission,
 )
 from server.app.repositories import (
     UserRepository,
@@ -27,6 +29,7 @@ from server.app.repositories import (
     DatasetRepository,
     ConversationRepository,
     DepartmentRepository,
+    PermissionRepository,
 )
 from server.core.database import get_session
 
@@ -43,6 +46,7 @@ class Factory:
     dataset_repository = partial(DatasetRepository, Dataset)
     conversation_repository = partial(ConversationRepository, UserConversation)
     logs_repository = partial(LogsRepository, Logs)
+    permission_repository = partial(PermissionRepository, Permission)
 
     def get_user_controller(self, db_session=Depends(get_session)):
         return UserController(
@@ -89,4 +93,9 @@ class Factory:
     def get_logs_controller(self, db_session=Depends(get_session)):
         return LogsController(
             logs_repository=self.logs_repository(db_session=db_session),
+        )
+
+    def get_permission_controller(self, db_session=Depends(get_session)):
+        return PermissionController(
+            permission_repository=self.permission_repository(db_session=db_session),
         )

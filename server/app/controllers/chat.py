@@ -38,7 +38,6 @@ class ChatController(BaseController[User]):
         self.conversation_repository = conversation_repository
         self.logs_repository = logs_repository
 
-    @Transactional(propagation=Propagation.REQUIRED)
     async def start_new_conversation(self, user: UserInfo, chat_request: ChatRequest):
         return await self.conversation_repository.create(
             {
@@ -80,21 +79,21 @@ class ChatController(BaseController[User]):
                 df = loader.load()
             connectors.append(df)
 
-        # print(f"一共加载了{len(connectors)}个数据集")
         config = {
             "enable_cache": False
         }
-        if env_config.OPENAI_API_KEY:
-            llm = OpenAIChatModel(env_config.OPENAI_API_KEY)
-            config["llm"] = llm
+        api_key = os.getenv("OPENAI_API_KEY")
+        base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
+        default_model = os.getenv("LLM_DEFAULT_MODEL", "gpt-4o-mini")
+        config["llm"] = OpenAIChatModel(api_key=api_key, base_url=base_url, model=default_model)
 
-        agent = DataFrameAgent(connectors, config=config, response_parser=JsonResponseParser)
+        agent = DataFrameAgent(connectors, config=config, response_parser=JsonResponseParser())
         
         if memory:
             agent.context.memory = memory
 
         start_time = time.time()
-        response = agent.follow_up(chat_request.query)
+        response = await agent.follow_up(chat_request.query)
 
         if isinstance(response, str) and (
             response.startswith("Unfortunately, I was not able to")
@@ -108,6 +107,7 @@ class ChatController(BaseController[User]):
             ]
         execution_time = round(time.time() - start_time, 3)
         log = await self.logs_repository.add_log(user.id, [{}], chat_request.query, execution_time=execution_time)
+        print(f"回答：{response}")
 
         response = jsonable_encoder([response])
         conversation_message = await self.conversation_repository.add_conversation_message(
