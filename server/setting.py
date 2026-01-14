@@ -51,7 +51,7 @@ class Config(BaseConfig):
         PASSWORD="qwer@123",
     )
     RELEASE_VERSION: str = "0.1.0"
-    SHOW_SQL_ALCHEMY_QUERIES: int = 0
+    SHOW_SQL_ALCHEMY_QUERIES: int = 1
     SECRET_KEY: str = "super-secret-key"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60 * 24

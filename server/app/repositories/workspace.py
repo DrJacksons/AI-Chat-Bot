@@ -175,17 +175,12 @@ class WorkspaceRepository(BaseRepository[Workspace]):
     async def create_workspace(self, workspace_data, user):
         new_workspace = Workspace(
             name=workspace_data.name,
+            description=workspace_data.description,
             user_id=user.id,
             department_id=user.departments[0].id,
         )
         self.session.add(new_workspace)
         await self.session.flush()
-
-        dataset_spaces = [
-            DatasetSpace(workspace_id=new_workspace.id, dataset_id=dataset_id)
-            for dataset_id in workspace_data.datasets
-        ]
-        self.session.add_all(dataset_spaces)
 
         user_space = UserSpace(workspace_id=new_workspace.id, user_id=user.id)
         self.session.add(user_space)
@@ -198,9 +193,6 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         async with self.session.begin():
             result = await self.session.execute(
                 select(Workspace)
-                .options(
-                    joinedload(Workspace.dataset_spaces),
-                )
                 .where(Workspace.id == workspace_id)
             )
             workspace = result.scalars().first()
@@ -213,7 +205,8 @@ class WorkspaceRepository(BaseRepository[Workspace]):
             )
 
             update_data = {
-                Workspace.name: workspace_data.name
+                Workspace.name: workspace_data.name,
+                Workspace.description: workspace_data.description,
             }
 
             await self.session.execute(
@@ -221,10 +214,5 @@ class WorkspaceRepository(BaseRepository[Workspace]):
                 .where(Workspace.id == workspace_id)
                 .values(update_data)
             )
-            dataset_spaces = [
-                DatasetSpace(workspace_id=workspace_id, dataset_id=dataset_id)
-                for dataset_id in workspace_data.datasets
-            ]
-            self.session.add_all(dataset_spaces)
             await self.session.commit()
             return workspace

@@ -1,6 +1,6 @@
 from typing import List
 
-from agent_core.helpers.memory import Memory
+from agent_core.memory.memory import Memory
 from server.app.models import ConversationMessage
 
 

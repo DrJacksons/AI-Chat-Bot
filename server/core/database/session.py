@@ -23,6 +23,7 @@ if config.DATABASE_SCHEMA:
         "writer": create_async_engine(
             config.DATABASE_URL,
             pool_recycle=3600,
+            echo=bool(config.SHOW_SQL_ALCHEMY_QUERIES),
             connect_args={"server_settings": {"search_path": config.DATABASE_SCHEMA}},
         ),
         "reader": create_async_engine(
@@ -34,8 +35,8 @@ if config.DATABASE_SCHEMA:
     }
 else:
     engines = {
-        "writer": create_async_engine(config.DATABASE_URL, pool_recycle=3600),
-        "reader": create_async_engine(config.DATABASE_URL, pool_recycle=3600, echo=True),
+        "writer": create_async_engine(config.DATABASE_URL, pool_recycle=3600, echo=bool(config.SHOW_SQL_ALCHEMY_QUERIES)),
+        "reader": create_async_engine(config.DATABASE_URL, pool_recycle=3600, echo=bool(config.SHOW_SQL_ALCHEMY_QUERIES)),
     }
 
 class RoutingSession(Session):

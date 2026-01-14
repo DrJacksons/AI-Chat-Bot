@@ -22,6 +22,7 @@ dependencies = [
     { name = "psycopg2" },
     { name = "pydantic", extra = ["email"] },
     { name = "pymilvus" },
+    { name = "pymysql" },
     { name = "python-dotenv" },
     { name = "python-jose" },
     { name = "python-multipart" },
@@ -53,6 +54,7 @@ requires-dist = [
     { name = "psycopg2", specifier = ">=2.9.11" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.12.4" },
     { name = "pymilvus", specifier = ">=2.6.3" },
+    { name = "pymysql", specifier = ">=1.1.2" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "python-jose", specifier = ">=3.5.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
@@ -1336,6 +1338,15 @@ dependencies = [
 sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/b6/c9/d83e22ae440f2331769e15f4d55e42af39215a04a412b0513a4e30a94089/pymilvus-2.6.3.tar.gz", hash = "sha256:10647808f201003d24eead2890722ffcba4b1ef713eff86c8da9623f93071ed9", size = 1343434, upload-time = "2025-10-31T06:26:07.985Z" }
 wheels = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/fb/33/b0309aefe3d2046262c6174dd5765449064e31ae364839f4eb572777f44e/pymilvus-2.6.3-py3-none-any.whl", hash = "sha256:c8551491a194ecfb0b22d44aa809ce749bf6969f2fa8d321523833e2d6c1313d", size = 273801, upload-time = "2025-10-31T06:26:06.002Z" },
+]
+
+[[package]]
+name = "pymysql"
+version = "1.1.2"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/f5/ae/1fe3fcd9f959efa0ebe200b8de88b5a5ce3e767e38c7ac32fb179f16a388/pymysql-1.1.2.tar.gz", hash = "sha256:4961d3e165614ae65014e361811a724e2044ad3ea3739de9903ae7c21f539f03", size = 48258, upload-time = "2025-08-24T12:55:55.146Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/7c/4c/ad33b92b9864cbde84f259d5df035a6447f91891f5be77788e2a3892bce3/pymysql-1.1.2-py3-none-any.whl", hash = "sha256:e6b1d89711dd51f8f74b1631fe08f039e7d76cf67a42a323d3178f0f25762ed9", size = 45300, upload-time = "2025-08-24T12:55:53.394Z" },
 ]
 
 [[package]]

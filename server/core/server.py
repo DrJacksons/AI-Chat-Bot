@@ -3,6 +3,8 @@ from typing import List
 
 import pandas as pd
 from dotenv import load_dotenv
+from logger_config import setup_loggers
+from loguru import logger
 from fastapi import FastAPI, Request
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
@@ -149,6 +151,8 @@ def create_app() -> FastAPI:
     @app_.on_event("startup")
     async def on_startup():
         load_dotenv()
+        setup_loggers()
+        app_.state.logger = logger.bind(name="fastapi_app")
         # await init_database()
         await init_user()
 

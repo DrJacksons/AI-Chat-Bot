@@ -27,12 +27,15 @@ def load_from_postgres(
 ):
     import psycopg2
 
+    # 如果没有指定schema，默认使用public schema
+    schema = connection_info.schema or "public"
     conn = psycopg2.connect(
         host=connection_info.host,
         user=connection_info.user,
         password=connection_info.password,
         dbname=connection_info.database,
         port=connection_info.port,
+        options=f"-c search_path={schema}",
     )
     # Suppress warnings of SqlAlchemy
     with warnings.catch_warnings():

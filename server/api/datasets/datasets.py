@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, Path, status, UploadFile, File, Form
 from typing import Optional
+from loguru import logger
 from server.app.controllers.datasets import DatasetController
 from server.app.schemas.responses.datasets import WorkspaceDatasetsResponseModel, DatasetsDetailsResponseModel
 from server.core.factory import Factory
 from uuid import UUID
-from server.app.schemas.requests.datasets import DatasetUpdateRequestModel
+from server.app.schemas.responses import APIResponse
+from server.app.schemas.requests.datasets import DatasetUpdateRequestModel, DatabaseConnectionRequestModel
 from server.app.schemas.responses.users import UserInfo
 from server.core.fastapi.dependencies.current_user import get_current_user
 from fastapi.responses import FileResponse
 
+app_logger = logger.bind(name="fastapi_app")
 dataset_router = APIRouter()
 
 @dataset_router.get("/", response_model=WorkspaceDatasetsResponseModel)
@@ -45,6 +48,15 @@ async def create_remote_dataset(
     ):
     return await datasets_controller.create_remote_dataset(name, description, url, user)
 
+
+@dataset_router.post("/db/create")
+async def create_database_dataset(
+        connection: DatabaseConnectionRequestModel = Form(...),
+        user: UserInfo = Depends(get_current_user),
+        datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
+    ):
+    return await datasets_controller.create_database_dataset(connection, user)
+
     
 @dataset_router.delete("/{dataset_id}")
 async def delete_datasets(
@@ -70,3 +82,14 @@ async def download_dataset(
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):
     return await datasets_controller.download_dataset(dataset_id)
+
+
+@dataset_router.post("/db/connect")
+async def connect_database(
+        connection: DatabaseConnectionRequestModel = Form(...),
+        user: UserInfo = Depends(get_current_user),
+        datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
+    ) -> APIResponse[dict]:
+    app_logger.info(f"Connecting to database {connection.database}")
+    tables = await datasets_controller.connect_database(connection, user)
+    return APIResponse(data={"tables": tables})

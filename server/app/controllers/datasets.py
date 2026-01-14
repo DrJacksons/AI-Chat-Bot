@@ -1,20 +1,35 @@
 import os
 import shutil
+import traceback
+import json
+from loguru import logger
 from fastapi import HTTPException, UploadFile
+from sqlalchemy import create_engine, inspect, text
 from server.app.models import Dataset, ConnectorType
 from server.app.repositories import DatasetRepository, WorkspaceRepository
 from server.core.controller import BaseController
+from server.core.utils.database import build_connection_url, DatabaseProcessor
 from server.core.exceptions.base import NotFoundException
-from server.app.schemas.responses.datasets import WorkspaceDatasetsResponseModel, DatasetsDetailsResponseModel
-from server.app.schemas.requests.datasets import DatasetUpdateRequestModel
+from server.app.schemas.responses.datasets import (
+    WorkspaceDatasetsResponseModel,
+    DatasetsDetailsResponseModel,
+)
+from server.app.schemas.requests.datasets import (
+    DatasetUpdateRequestModel,
+    DatabaseConnectionRequestModel,
+)
 from server.app.schemas.responses.users import UserInfo
 from server.core.utils.dataframe import read_csv, read_excel, convert_dataframe_to_dict
 from server.core.database.transactional import Propagation, Transactional
 from server.setting import config
-from data_inteligence.constants import DEFAULT_STORGE_PATH
+from data_inteligence.constants import DEFAULT_STORGE_PATH, REMOTE_SOURCE_TYPES
 from data_inteligence.helpers.path import calculate_md5
-from data_inteligence.data_loader.semantic_layer_schema import Source
+from data_inteligence.data_loader.semantic_layer_schema import Source, SemanticLayerSchema
+
 from fastapi.responses import FileResponse
+
+
+app_logger = logger.bind(name="fastapi_app")
 
 
 class DatasetController(BaseController[Dataset]):
@@ -27,7 +42,6 @@ class DatasetController(BaseController[Dataset]):
         self.dataset_repository = dataset_repository
         self.space_repository = space_repository
 
-
     async def get_dataset_by_id(self, dataset_id: str):
         dataset = await self.dataset_repository.get_by_id(dataset_id)
         if not dataset:
@@ -35,7 +49,6 @@ class DatasetController(BaseController[Dataset]):
                 "No dataset found with the given ID. Please check the ID and try again"
             )
         return dataset
-
 
     async def get_all_datasets(self) -> WorkspaceDatasetsResponseModel:
         datasets = await self.get_all()
@@ -47,12 +60,10 @@ class DatasetController(BaseController[Dataset]):
 
         return WorkspaceDatasetsResponseModel(datasets=datasets)
     
-
     async def get_datasets_details(self, dataset_id) -> DatasetsDetailsResponseModel:
         dataset = await self.get_dataset_by_id(dataset_id)
         return DatasetsDetailsResponseModel(dataset=dataset)
     
-
     @Transactional(propagation=Propagation.REQUIRED)
     async def delete_datasets(self, dataset_id, user):
         dataset = await self.get_dataset_by_id(dataset_id)
@@ -72,22 +83,22 @@ class DatasetController(BaseController[Dataset]):
 
         return {"message": "Dataset deleted successfully"}
     
-
     async def update_dataset(self, dataset_id: str, dataset_update: DatasetUpdateRequestModel):
         dataset = await self.get_dataset_by_id(dataset_id)
 
         dataset.name = dataset_update.name
         dataset.description = dataset_update.description
+        dataset.field_descriptions = {"columns": dataset_update.field_descriptions}
+        dataset.filterable_columns = {"columns": dataset_update.filterable_columns}
         dataset = await self.dataset_repository.update_dataset(dataset=dataset)
 
         return {"message": "Dataset updated successfully"}
     
-
     @Transactional(propagation=Propagation.REQUIRED)
     async def create_local_dataset(self, file: UploadFile, name: str, description: str, user: UserInfo):
         # 检查数据集名称是否已存在
         md5_hash = calculate_md5(file)
-        existing_dataset = await self.check_duplicate_file(user.id, md5_hash)
+        existing_dataset = await self._check_duplicate_file(user.id, md5_hash)
         if existing_dataset:
             return DatasetsDetailsResponseModel(dataset=existing_dataset)
         store_path = DEFAULT_STORGE_PATH / "datasets" / user.space.name / name
@@ -132,12 +143,12 @@ class DatasetController(BaseController[Dataset]):
             config={"file_path": str(file_path), 'file_digest': md5_hash},
             head=head,
             field_descriptions=field_descriptions,
+            filterable_columns=[],
         )
         await self.space_repository.add_dataset_to_space(workspace_id=user.space.id,dataset_id=dataset.id)
 
         return DatasetsDetailsResponseModel(dataset=dataset)
     
-
     async def create_remote_dataset(self, name: str, description: str, url: str, user: UserInfo):
         dataset = await self.dataset_repository.create_dataset(
             user_id=user.id,
@@ -152,6 +163,121 @@ class DatasetController(BaseController[Dataset]):
 
         return DatasetsDetailsResponseModel(dataset=dataset)
 
+    @Transactional(propagation=Propagation.REQUIRED)
+    async def create_database_dataset(self, connection: DatabaseConnectionRequestModel, user: UserInfo):
+        # 循环遍历tables，创建数据集
+        table_names = connection.table_names or []
+        if not table_names:
+            try:
+                table_names = await self.connect_database(connection, user)
+            except HTTPException as e:
+                raise HTTPException(status_code=400, detail=f"Failed to connect to database: {e.detail}")
+        datasets = []
+        existed_datasets = await self.dataset_repository.get_user_datasets(user.id, connector_type=ConnectorType.DB)
+        existed_map: dict[tuple[str, str], Dataset] = {}
+        for ds in existed_datasets:
+            if not isinstance(ds.connector.config, dict):
+                continue
+            try:
+                config_str = json.dumps(ds.connector.config, sort_keys=True)
+            except TypeError:
+                continue
+            key = (ds.name, config_str)
+            if key not in existed_map:
+                existed_map[key] = ds
+        for table_name in table_names:
+            try:
+                app_logger.info(f"开始创建表数据集: {table_name}")
+                # 1、构建table的SemanticLayerSchema 
+                source = {
+                    "type": connection.type,
+                    "connection": {
+                        "host": connection.host,
+                        "port": connection.port,
+                        "user": connection.username,
+                        "password": connection.password,
+                        "database": connection.database,
+                        "schema": connection.db_schema,
+                    },
+                    "table": table_name.lower()
+                }
+                initial_schema = SemanticLayerSchema(
+                    name=table_name,
+                    source=Source(**source)
+                )
+                # 2、加载表数据并获取comment
+                processor = DatabaseProcessor(db_type=connection.type.lower(), schema=initial_schema)
+                schema = processor.parse_comment(table_name, connection.db_schema)
+                schema_dict = schema.to_dict()
+                schema_config_str = json.dumps(schema_dict, sort_keys=True)
+                existed = existed_map.get((table_name, schema_config_str))
+                if existed:
+                    app_logger.info(f"发现重复数据集: {existed.id}")
+                    datasets.append(existed)
+                    continue
+                dataset = await self.dataset_repository.create_dataset(
+                    user_id=user.id,
+                    name=table_name,
+                    description=schema.description,
+                    connector_type=ConnectorType.DB,
+                    config=schema_dict,
+                    head=processor.get_table_head(),
+                    field_descriptions=[c.model_dump(exclude_none=True, by_alias=True) for c in schema.columns or []],
+                    filterable_columns=[],
+                )
+                existed_map[(table_name, schema_config_str)] = dataset
+                app_logger.info(f"数据集表插入成功: {dataset.id}")
+                
+                # 3、将数据集添加到工作空间
+                workspaces = await self.space_repository.get_user_workspaces(user)
+                if workspaces:
+                    workspace = workspaces[0]
+                    await self.space_repository.add_dataset_to_space(
+                        workspace_id=workspace.id, 
+                        dataset_id=dataset.id
+                    )
+                    app_logger.info(f"数据集已添加到工作空间: {workspace.id}")
+                else:
+                    raise HTTPException(status_code=400, detail=f"用户 {user.id} 没有工作空间，请先创建")
+                
+                app_logger.info(f"表数据集创建完成: {table_name}")
+                datasets.append(dataset)
+            except Exception as e:
+                app_logger.error(f"创建表数据集 {table_name} 失败: {str(e)}")
+                app_logger.error(traceback.format_exc())
+                raise HTTPException(status_code=500, detail=f"Failed to create dataset({table_name}): {str(e)}")
+        return WorkspaceDatasetsResponseModel(datasets=datasets)
+
+    async def connect_database(
+        self, connection: DatabaseConnectionRequestModel, user: UserInfo
+    ) -> list[str]:
+        db_type = connection.type.lower()
+        if db_type not in REMOTE_SOURCE_TYPES:
+            raise HTTPException(status_code=400, detail=f"Unsupported database type: {connection.type}")
+
+        url = build_connection_url(connection, db_type)
+        try:
+            engine = create_engine(url)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to create database engine: {str(e)}")
+
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+                inspector = inspect(conn)
+                tables = inspector.get_table_names(schema=connection.db_schema)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to connect to database or query tables: {str(e)}",
+            )
+        finally:
+            try:
+                engine.dispose()
+            except Exception:
+                pass
+
+        return tables
 
     async def download_dataset(self, dataset_id):
         await self.get_dataset_by_id(dataset_id)
@@ -162,36 +288,20 @@ class DatasetController(BaseController[Dataset]):
 
         return FileResponse(file_path, filename=f"{dataset_id}.csv", media_type='text/csv')
 
-    async def check_duplicate_file(self, user_id: int, file_md5: str):
-        # 检查用户是否已上传过相同内容的文件
-        # logger.debug(f"Checking duplicate file for user {user_id}, MD5: {file_md5}")
-        try:
-            datasets = await self.dataset_repository.get_user_datasets(user_id)
-            if not datasets:
-                # logger.debug(f"No datasets found for user {user_id}")
-                return None
-
-            for dataset in datasets:
-                if not dataset.connector:
-                    # logger.debug(f"Dataset {dataset.id} has no connector")
-                    continue
-
-                config = dataset.connector.config
-                if not isinstance(config, dict):
-                    # logger.warning(f"Invalid config type for dataset {dataset.id}: {type(config)}")
-                    continue
-
-                stored_md5 = config.get('file_digest')
-                if not stored_md5:
-                    # logger.debug(f"Dataset {dataset.id} has no file_digest in config")
-                    continue
-
-                if stored_md5 == file_md5:
-                    # logger.info(f"Found duplicate file: dataset {dataset.id}, MD5: {file_md5}")
-                    return dataset
-
-            # logger.debug(f"No duplicate found for MD5: {file_md5}")   
+    async def _check_duplicate_file(self, user_id: int, file_md5: str):
+        datasets = await self.dataset_repository.get_user_datasets(
+            user_id, connector_type=ConnectorType.CSV
+        )
+        if not datasets:
             return None
-        except Exception as e:
-            # logger.error(f"Error checking duplicate file: {str(e)}", exc_info=True)
-            return None
+
+        for dataset in datasets:
+            connector = dataset.connector
+            if not connector or not isinstance(connector.config, dict):
+                continue
+
+            stored_md5 = connector.config.get("file_digest")
+            if stored_md5 and stored_md5 == file_md5:
+                return dataset
+
+        return None

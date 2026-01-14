@@ -30,7 +30,6 @@ def read_csv(filepath: str, filterable_columns: Optional[List[str]] = None) -> D
         data = pd.read_csv(filepath, usecols=lambda c: c not in exclude)
     else:
         data = pd.read_csv(filepath)
-    # Check file name whether contains Chinese char
     if check_filename_contain_zh(filepath):
         df = DataFrame(data)
     else:
@@ -44,7 +43,6 @@ def read_excel(filepath: str, filterable_columns: Optional[List[str]] = None) ->
     data = pd.read_excel(filepath)
     if filterable_columns:
         data = data.drop(columns=filterable_columns, errors='ignore')
-    # Check file name whether contains Chinese char
     if check_filename_contain_zh(filepath):
         df = DataFrame(data)
     else:

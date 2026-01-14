@@ -20,6 +20,7 @@ class DatasetRepository(BaseRepository[Dataset]):
         head: dict,
         description: str = "",
         field_descriptions: List[dict] = [{}],
+        filterable_columns: Optional[List[str]] = None,
     ):
         connector = Connector(type=connector_type.value, config=config, user_id=user_id)
         self.session.add(connector)
@@ -33,6 +34,7 @@ class DatasetRepository(BaseRepository[Dataset]):
             connector_id=connector.id,
             description=description,
             field_descriptions={"columns": field_descriptions},
+            filterable_columns={"columns": filterable_columns},
         )
 
         self.session.add(dataset)
@@ -56,13 +58,26 @@ class DatasetRepository(BaseRepository[Dataset]):
         return dataset
 
 
-    async def get_user_datasets(self, user_id: int):
-        result = await self.session.execute(
-            select(Dataset)
-            .options(
-                joinedload(Dataset.connector)
+    async def get_user_datasets(self, user_id: int, connector_type: ConnectorType = None):
+        if connector_type:
+            result = await self.session.execute(
+                select(Dataset)
+                .options(
+                    joinedload(Dataset.connector)
+                )
+                .where(
+                    Dataset.user_id == user_id,
+                    Connector.type == connector_type.value,
+                )
+                .order_by(Dataset.created_at.desc())
             )
-            .where(Dataset.user_id == user_id)
-            .order_by(Dataset.created_at.desc())
-        )
+        else:
+            result = await self.session.execute(
+                select(Dataset)
+                .options(
+                    joinedload(Dataset.connector)
+                )
+                .where(Dataset.user_id == user_id)
+                .order_by(Dataset.created_at.desc())
+            )
         return result.unique().scalars().all()

@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import List
+from typing import Optional
 
 
 class WorkspaceCreateRequestModel(BaseModel):
     name: str
-    datasets: List[str]
+    description: Optional[str] = None

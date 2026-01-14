@@ -53,7 +53,7 @@ class WorkspaceController(BaseController[Workspace]):
         return workspace
 
     async def get_workspace_users(
-            self, workspace_id: str,
+        self, workspace_id: str,
     ):
         await self.get_workspace_by_id(workspace_id)
         users = await self.space_repository.get_users_by_workspace_id(workspace_id)

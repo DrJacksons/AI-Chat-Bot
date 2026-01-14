@@ -6,6 +6,8 @@ from typing import List
 import pandas as pd
 from agent_core.agent.dataframe_agent import DataFrameAgent
 from data_inteligence.helpers.path import find_project_root
+from data_inteligence.data_loader.semantic_layer_schema import SemanticLayerSchema
+from data_inteligence.data_loader.sql_loader import SQLDatasetLoader
 from agent_core.llm.oai import OpenAIChatModel
 
 from server.app.models import Dataset, User
@@ -16,7 +18,7 @@ from server.app.repositories.logs import LogsRepository
 from server.app.schemas.requests.chat import ChatRequest
 from server.app.schemas.responses.chat import ChatResponse
 from server.app.schemas.responses.users import UserInfo
-# from server.app.utils.memory import prepare_conv_memory
+from server.app.utils.memory import prepare_conv_memory
 from server.core.controller import BaseController
 from server.core.database.transactional import Propagation, Transactional
 from server.core.utils.json_encoder import jsonable_encoder
@@ -59,7 +61,6 @@ class ChatController(BaseController[User]):
         if not chat_request.conversation_id:
             user_conversation = await self.start_new_conversation(user, chat_request)
             conversation_id = user_conversation.id
-
         else:
             conversation_messages = (
                 await self.conversation_repository.get_conversation_messages(
@@ -77,10 +78,15 @@ class ChatController(BaseController[User]):
                 file_path = Path(find_project_root()) / config["file_path"]
                 loader = DatasetLoader.create_loader_from_path(file_path.parent)
                 df = loader.load()
+            elif dataset.connector.type == "DB":
+                if isinstance(config, dict) and "source" in config:
+                    schema = SemanticLayerSchema(**config)
+                    loader = SQLDatasetLoader(schema, "")
+                    df = loader.load()
             connectors.append(df)
 
         config = {
-            "enable_cache": False
+            "enable_cache": True,
         }
         api_key = os.getenv("OPENAI_API_KEY")
         base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
@@ -90,24 +96,23 @@ class ChatController(BaseController[User]):
         agent = DataFrameAgent(connectors, config=config, response_parser=JsonResponseParser())
         
         if memory:
-            agent.context.memory = memory
+            agent._state.memory = memory
 
         start_time = time.time()
         response = await agent.follow_up(chat_request.query)
 
         if isinstance(response, str) and (
-            response.startswith("Unfortunately, I was not able to")
+            response.startswith("抱歉，我无法回答")
         ):
             return [
                 {
                     "type": "string",
-                    "message": "I'm sorry, I wasn't able to fully understand your question. Could you please rephrase it or provide more details?",
-                    "value": "I'm sorry, I wasn't able to fully understand your question. Could you please rephrase it or provide more details?",
+                    "message": "抱歉，我无法回答你的问题。请提供更详细的信息。",
+                    "value": "抱歉，我无法回答你的问题。请重试。",
                 }
             ]
         execution_time = round(time.time() - start_time, 3)
         log = await self.logs_repository.add_log(user.id, [{}], chat_request.query, execution_time=execution_time)
-        print(f"回答：{response}")
 
         response = jsonable_encoder([response])
         conversation_message = await self.conversation_repository.add_conversation_message(

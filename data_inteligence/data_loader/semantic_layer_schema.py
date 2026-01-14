@@ -184,6 +184,8 @@ class SQLConnectionConfig(BaseModel):
     database: str = Field(..., description="Target database name")
     user: str = Field(..., description="Database username")
     password: str = Field(..., description="Database password")
+    # postgres数据库会有schema的概念，而mysql和oracle没有
+    schema: str = Field(None, description="Schema for the database server")
 
     def __eq__(self, other):
         return (
@@ -192,6 +194,7 @@ class SQLConnectionConfig(BaseModel):
             and self.database == other.database
             and self.user == other.user
             and self.password == other.password
+            and self.schema == other.schema
         )
 
 
