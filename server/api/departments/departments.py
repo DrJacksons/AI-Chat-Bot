@@ -1,8 +1,8 @@
 from typing import List
 from uuid import UUID
-
 from fastapi import APIRouter, Depends, Body, HTTPException
 
+from server.core.fastapi.dependencies.authentication import AuthenticationRequired
 from server.app.controllers.department import DepartmentController
 from server.app.schemas.requests.department import CreateDepartmentRequest, UpdateDepartmentRequest
 from server.app.schemas.responses.department import DepartmentBase
@@ -36,21 +36,19 @@ async def list_departments(
     return await department_controller.repository.get_all()
 
 
-@department_router.get("/{department_id}", response_model=DepartmentBase)
+@department_router.get("/{department_id}", dependencies=[Depends(AuthenticationRequired)], response_model=DepartmentBase)
 async def get_department(
     department_id: UUID,
     department_controller: DepartmentController = Depends(Factory().get_department_controller),
-    user: User = Depends(get_current_user),
 ):
     return await department_controller.repository.get_by_id(department_id)
 
 
-@department_router.patch("/{department_id}", response_model=DepartmentBase)
+@department_router.patch("/{department_id}", dependencies=[Depends(AuthenticationRequired)], response_model=DepartmentBase)
 async def update_department(
     department_id: UUID,
     request: UpdateDepartmentRequest,
     department_controller: DepartmentController = Depends(Factory().get_department_controller),
-    user: User = Depends(get_current_user),
 ):
     # TODO: Add permission check
     return await department_controller.update_department(
@@ -59,11 +57,10 @@ async def update_department(
     )
 
 
-@department_router.delete("/{department_id}", status_code=204)
+@department_router.delete("/{department_id}", dependencies=[Depends(AuthenticationRequired)], status_code=204)
 async def delete_department(
     department_id: UUID,
     department_controller: DepartmentController = Depends(Factory().get_department_controller),
-    user: User = Depends(get_current_user),
 ):
     # TODO: Add permission check
     await department_controller.delete_department(department_id)

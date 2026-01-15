@@ -27,8 +27,8 @@ async def fix_db():
     await create_tables()
 
     print("Patching user table...")
-    await run_stmt("ALTER TABLE \"user\" ADD COLUMN nick_name VARCHAR(255)")
-    await run_stmt("ALTER TABLE \"user\" ADD COLUMN full_name VARCHAR(255)")
+    await run_stmt("ALTER TABLE \"user\" ADD COLUMN last_name VARCHAR(255)")
+    await run_stmt("ALTER TABLE \"user\" ADD COLUMN first_name VARCHAR(255)")
 
     print("Patching role table...")
     await run_stmt("ALTER TABLE role ADD COLUMN workspace_id UUID")

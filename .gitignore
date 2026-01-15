@@ -3,8 +3,10 @@
 /.venv/
 /.git/
 __pycache__/
+.pytest_cache/
 alembic/
 alembic.ini
 logs/
 stores/
 .env
+todolist.txt

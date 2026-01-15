@@ -6,6 +6,7 @@ from server.app.schemas.responses.datasets import WorkspaceDatasetsResponseModel
 from server.core.factory import Factory
 from uuid import UUID
 from server.app.schemas.responses import APIResponse
+from server.core.fastapi.dependencies.authentication import AuthenticationRequired
 from server.app.schemas.requests.datasets import DatasetUpdateRequestModel, DatabaseConnectionRequestModel
 from server.app.schemas.responses.users import UserInfo
 from server.core.fastapi.dependencies.current_user import get_current_user
@@ -14,12 +15,12 @@ from fastapi.responses import FileResponse
 app_logger = logger.bind(name="fastapi_app")
 dataset_router = APIRouter()
 
-@dataset_router.get("/", response_model=WorkspaceDatasetsResponseModel)
+@dataset_router.get("/", dependencies=[Depends(AuthenticationRequired)], response_model=WorkspaceDatasetsResponseModel)
 async def get_all_datasets(datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)):
     return await datasets_controller.get_all_datasets()
 
 
-@dataset_router.get("/{dataset_id}", response_model=DatasetsDetailsResponseModel)
+@dataset_router.get("/{dataset_id}", dependencies=[Depends(AuthenticationRequired)], response_model=DatasetsDetailsResponseModel)
 async def get_dataset(
         dataset_id: UUID = Path(..., description="ID of the dataset"),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
@@ -84,10 +85,9 @@ async def download_dataset(
     return await datasets_controller.download_dataset(dataset_id)
 
 
-@dataset_router.post("/db/connect")
+@dataset_router.post("/db/connect", dependencies=[Depends(AuthenticationRequired)], response_model=APIResponse[dict])
 async def connect_database(
         connection: DatabaseConnectionRequestModel = Form(...),
-        user: UserInfo = Depends(get_current_user),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ) -> APIResponse[dict]:
     app_logger.info(f"Connecting to database {connection.database}")

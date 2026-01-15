@@ -249,7 +249,7 @@ class DatasetController(BaseController[Dataset]):
         return WorkspaceDatasetsResponseModel(datasets=datasets)
 
     async def connect_database(
-        self, connection: DatabaseConnectionRequestModel, user: UserInfo
+        self, connection: DatabaseConnectionRequestModel
     ) -> list[str]:
         db_type = connection.type.lower()
         if db_type not in REMOTE_SOURCE_TYPES:

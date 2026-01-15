@@ -3,9 +3,6 @@ Constants used in the data inteligence package.
 """
 from pathlib import Path
 
-# 默认API url
-DEFAULT_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-
 # 默认存储路径
 DEFAULT_STORGE_PATH = Path("stores")
 
