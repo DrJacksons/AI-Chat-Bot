@@ -258,12 +258,12 @@ class Source(BaseModel):
 
 
 class SemanticLayerSchema(BaseModel):
-    name: str = Field(..., description="Dataset name.")
+    name: str = Field(..., description="数据集名称")
     source: Optional[Source] = Field(None, description="Data source for your dataset.")
-    view: Optional[bool] = Field(None, description="Whether table is a view")
-    description: Optional[str] = Field(None, description="Dataset’s contents and purpose description.")
-    columns: Optional[List[Column]] = Field(None, description="Structure and metadata of your dataset’s columns.")
-    relations: Optional[List[Relation]] = Field(None, description="Relationships between columns and tables.")
+    view: Optional[bool] = Field(None, description="是否为视图")
+    description: Optional[str] = Field(None, description="数据集的内容描述")
+    columns: Optional[List[Column]] = Field(None, description="数据集列的结构和元数据")
+    relations: Optional[List[Relation]] = Field(None, description="列与表之间的关系")
     order_by: Optional[List[str]] = Field(None, description="数据集的排序标准")
     limit: Optional[int] = Field(None, description="要检索的数据集最大行数")
     transformations: Optional[List[Transformation]] = Field(None, description="数据集的转换列表")

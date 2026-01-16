@@ -34,21 +34,20 @@ class User(Base):
     __tablename__ = "user"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String(255), index=True, unique=True)
-    last_name = Column(String(255), nullable=True)
-    first_name = Column(String(255), nullable=True)
+    username = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.now)
     password = Column(String(255))
     verified = Column(Boolean, default=False)
     department_id = Column(UUID(as_uuid=True), ForeignKey("department.id"), nullable=True)
     permission_id = Column(UUID(as_uuid=True), ForeignKey("permission.id"), nullable=True)
-
+    features = Column(JSON, nullable=True)
+    
     department = relationship("Department", back_populates="users", foreign_keys=[department_id])
     datasets = relationship("Dataset", back_populates="user")
     connectors = relationship("Connector", back_populates="user")
     spaces = relationship("Workspace", back_populates="user")
     user_spaces = relationship("UserSpace", back_populates="user")
     logs = relationship("Logs", back_populates="user")
-    features = Column(JSON, nullable=True)
     permission = relationship("Permission", back_populates="users", foreign_keys=[permission_id])
 
 
@@ -60,7 +59,6 @@ class Department(Base):
     settings = Column(JSON, nullable=True)
 
     users = relationship("User", back_populates="department")
-    workspaces = relationship("Workspace", back_populates="department")
 
 
 class Permission(Base):
@@ -115,10 +113,8 @@ class Workspace(Base):
     name = Column(String)
     description = Column(String, nullable=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
-    department_id = Column(UUID(as_uuid=True), ForeignKey("department.id"))
     created_at = Column(DateTime, default=datetime.datetime.now)
 
-    department = relationship("Department", back_populates="workspaces")
     user = relationship("User", back_populates="spaces")
     dataset_spaces = relationship("DatasetSpace", back_populates="workspace")
     user_spaces = relationship("UserSpace", back_populates="workspace")

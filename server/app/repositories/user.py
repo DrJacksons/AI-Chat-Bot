@@ -37,8 +37,8 @@ class UserRepository(BaseRepository[User]):
         Get user by username.
         """
         query = self._query(join_)
-        query = query.filter(User.last_name == username)
-
+        query = query.filter(User.username == username)
+        
         if join_ is not None:
             return await self._all_unique(query)
 
@@ -113,8 +113,7 @@ class UserRepository(BaseRepository[User]):
         user = User(
             email=config.EMAIL,
             password=password,
-            last_name="admin",
-            first_name="admin",
+            username="admin",
             department_id=department.id,
             permission_id=admin_perm.id,
             verified=True,
@@ -125,9 +124,8 @@ class UserRepository(BaseRepository[User]):
 
         workspace = Workspace(
             name=config.DEFAULT_SPACE,
-            description="管理员工作空间，具有所有权限",
+            description="测试数据",
             user_id=user.id,
-            department_id=department.id,
         )
         self.session.add(workspace)
 

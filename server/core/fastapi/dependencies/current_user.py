@@ -72,7 +72,7 @@ async def get_current_user(
 
     return UserInfo(
         email=user.email,
-        last_name=user.last_name,
+        username=user.username,
         id=user.id,
         department=department_base,
         space=space_base,

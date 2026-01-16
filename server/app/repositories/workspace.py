@@ -101,8 +101,7 @@ class WorkspaceRepository(BaseRepository[Workspace]):
         result = await self.session.execute(
             select(
                 User.id,
-                User.last_name,
-                User.first_name,
+                User.username,
                 User.email
             ).join(UserSpace).filter(UserSpace.workspace_id == workspace_id)
         )

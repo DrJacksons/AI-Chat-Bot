@@ -57,7 +57,7 @@ class UserController(BaseController[User]):
 
         return UserInfo(
             email=user.email,
-            last_name=user.last_name,
+            username=user.username,
             id=user.id,
             department=department_base,
             space=space_base,

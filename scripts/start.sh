@@ -3,13 +3,13 @@ DIR=$(cd "$(dirname "$0")" && cd .. && pwd)
 echo "进入项目目录"
 echo $DIR
 
-# 检查并终止所有Python进程
-echo "正在查找并终止所有Python进程..."
-for pid in $(ps -ef | grep python | grep -v grep | awk '{print $2}'); do
-    echo "终止Python进程，PID: $pid"
+# 检查并终止当前问数服务的进程（gunicorn server.core.server:app）
+echo "正在查找并终止当前问数服务进程..."
+for pid in $(ps -ef | grep "gunicorn" | grep "server.core.server:app" | grep -v grep | awk '{print $2}'); do
+    echo "终止问数服务进程，PID: $pid"
     kill -9 "$pid" 2>/dev/null
 done
-echo "所有Python进程已终止"
+echo "当前问数服务进程已终止（如存在）"
 
 echo "正在启动问数服务..."
 

@@ -14,7 +14,6 @@ __all__ = [
     "AuthController",
     "UserController",
     "WorkspaceController",
-    # "DatasetController",
     "LogsController",
     "ConversationController",
     "DepartmentController",

@@ -17,7 +17,7 @@ class UserResponse(BaseModel):
 
 class UserInfo(BaseModel):
     email: str = Field(..., example="john.doe@example.com")
-    last_name: str = Field(..., example="john.doe")
+    username: str = Field(..., example="john.doe")
     id: UUID4 = Field(..., example="a3b8f042-1e16-4f0a-a8f0-421e16df0a2f")
     department: DepartmentBase = Field(...)
     space: SpaceBase = Field(...)
@@ -30,7 +30,7 @@ class UserInfo(BaseModel):
 
 class WorkspaceUserResponse(BaseModel):
     id: UUID4
-    last_name: Optional[str]
+    username: Optional[str]
     email: Optional[str]
 
     class Config:

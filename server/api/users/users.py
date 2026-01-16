@@ -36,7 +36,7 @@ async def register_user(
     # 显式构造 UserResponse，确保字段匹配 (User.id -> UserResponse.uuid)
     return UserResponse(
         email=created_user.email,
-        username=created_user.last_name,
+        username=created_user.username,
         uuid=created_user.id,
     )
 

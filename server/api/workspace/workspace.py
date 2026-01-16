@@ -5,7 +5,6 @@ from server.app.controllers.workspace import WorkspaceController
 from server.core.factory import Factory
 from server.app.schemas.responses.users import UserInfo
 from server.core.fastapi.dependencies.current_user import get_current_user
-from server.app.schemas.responses.users import WorkspaceUsersResponse
 from server.app.schemas.responses.datasets import WorkspaceDatasetsResponseModel
 from server.app.schemas.requests.workspace import WorkspaceCreateRequestModel
 
@@ -20,17 +19,7 @@ async def get_user_workspaces(
     return await workspace_controller.get_user_workspaces(user)
 
 
-@workspace_router.get("/{workspace_id}/users", response_model=WorkspaceUsersResponse)
-async def get_workspace_users(
-    workspace_id: UUID = Path(..., description="ID of the workspace"),
-    workspace_controller: WorkspaceController = Depends(Factory().get_space_controller),
-):
-    return await workspace_controller.get_workspace_users(workspace_id)
-
-
-@workspace_router.get(
-    "/{workspace_id}/datasets", response_model=WorkspaceDatasetsResponseModel
-)
+@workspace_router.get("/{workspace_id}/datasets", response_model=WorkspaceDatasetsResponseModel)
 async def get_workspace_datasets(
     workspace_id: UUID = Path(..., description="ID of the workspace"),
     workspace_controller: WorkspaceController = Depends(Factory().get_space_controller),
