@@ -1,7 +1,6 @@
 from enum import Enum
 from functools import wraps
 
-from server.setting import config
 from .session import session
 
 

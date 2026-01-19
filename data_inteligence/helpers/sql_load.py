@@ -1,6 +1,6 @@
 import pandas as pd
 import warnings
-from typing import Optional, List
+from typing import Optional
 from data_inteligence.data_loader.semantic_layer_schema import SQLConnectionConfig
 
 

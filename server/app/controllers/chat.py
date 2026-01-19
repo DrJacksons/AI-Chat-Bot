@@ -2,12 +2,13 @@ import os
 import time
 from pathlib import Path
 from typing import List
+from loguru import logger
 
-import pandas as pd
 from agent_core.agent.dataframe_agent import DataFrameAgent
 from data_inteligence.helpers.path import find_project_root
 from data_inteligence.data_loader.semantic_layer_schema import SemanticLayerSchema
 from data_inteligence.data_loader.sql_loader import SQLDatasetLoader
+from data_inteligence.data_loader.loader import DatasetLoader
 from agent_core.llm.oai import OpenAIChatModel
 
 from server.app.models import Dataset, User
@@ -23,7 +24,6 @@ from server.core.controller import BaseController
 from server.core.database.transactional import Propagation, Transactional
 from server.core.utils.json_encoder import jsonable_encoder
 from server.core.utils.response_parser import JsonResponseParser
-from server.setting import config as env_config
 
 
 class ChatController(BaseController[User]):
@@ -40,6 +40,35 @@ class ChatController(BaseController[User]):
         self.conversation_repository = conversation_repository
         self.logs_repository = logs_repository
 
+    async def get_clarification_questions(self, workspace_id: str) -> List[str]:
+        datasets: List[Dataset] = await self.space_repository.get_space_datasets(
+            workspace_id
+        )
+        logger.info(f"查询到{len(datasets)}条dataset")
+        connectors = []
+        for dataset in datasets:
+            config = dataset.connector.config
+            if dataset.connector.type == "CSV":
+                # 读取schema.yaml文件加载Dataframe数据
+                file_path = Path(find_project_root()) / config["file_path"]
+                loader = DatasetLoader.create_loader_from_path(file_path.parent)
+                df = loader.load()
+            elif dataset.connector.type == "DB":
+                if isinstance(config, dict) and "source" in config:
+                    schema = SemanticLayerSchema(**config)
+                    loader = SQLDatasetLoader(schema, "")
+                    df = loader.load()
+            connectors.append(df)
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
+        default_model = os.getenv("LLM_DEFAULT_MODEL", "gpt-4o-mini")
+        config = {"llm": OpenAIChatModel(api_key=api_key, base_url=base_url, model=default_model)}
+        agent = DataFrameAgent(connectors, config=config)
+        result = await agent.clarification_questions()
+        return result
+
+    @Transactional(propagation=Propagation.REQUIRED)
     async def start_new_conversation(self, user: UserInfo, chat_request: ChatRequest):
         return await self.conversation_repository.create(
             {
@@ -50,7 +79,6 @@ class ChatController(BaseController[User]):
 
     @Transactional(propagation=Propagation.REQUIRED)
     async def chat(self, user: UserInfo, chat_request: ChatRequest) -> ChatResponse:
-        from data_inteligence.data_loader.loader import DatasetLoader
         datasets: List[Dataset] = await self.space_repository.get_space_datasets(
             chat_request.workspace_id
         )
@@ -61,6 +89,7 @@ class ChatController(BaseController[User]):
         if not chat_request.conversation_id:
             user_conversation = await self.start_new_conversation(user, chat_request)
             conversation_id = user_conversation.id
+            logger.bind(name="fastapi_app").info(f"new conversation id created. conversation_id: {conversation_id}")
         else:
             conversation_messages = (
                 await self.conversation_repository.get_conversation_messages(

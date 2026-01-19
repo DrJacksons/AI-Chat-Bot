@@ -5,7 +5,6 @@ from .logs import LogsController
 from .conversation import ConversationController
 from .department import DepartmentController
 from .datasets import DatasetController
-from .conversation import ConversationController
 from .chat import ChatController
 from .permission import PermissionController
 

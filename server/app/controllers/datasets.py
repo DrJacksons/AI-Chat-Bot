@@ -66,7 +66,7 @@ class DatasetController(BaseController[Dataset]):
     
     @Transactional(propagation=Propagation.REQUIRED)
     async def delete_datasets(self, dataset_id, user):
-        dataset = await self.get_dataset_by_id(dataset_id)
+        # dataset = await self.get_dataset_by_id(dataset_id)
         await self.space_repository.delete_datasetspace(dataset_id, user.space.id)
 
         # if dataset.connector.type == "CSV":

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from pathlib import Path
-from typing import Hashable, List, Optional, Union
+from typing import List, Optional, Union
 
 from .dataframe import DataFrame, VirtualDataFrame
 from .data_loader.semantic_layer_schema import (
@@ -14,6 +14,7 @@ from .data_loader.semantic_layer_schema import (
 from .data_loader.loader import DatasetLoader
 from .helpers.sql_sanitizer import sanitize_sql_table_name
 from .helpers.path import get_validated_dataset_path
+from .constants import DEFAULT_STORGE_PATH
 
 
 def create(
@@ -195,9 +196,9 @@ def load(dataset_path: str) -> DataFrame:
     # Validate the dataset path
     get_validated_dataset_path(dataset_path)
 
-    dataset_full_path = os.path.join(find_project_root(), "datasets", dataset_path)
+    dataset_full_path = DEFAULT_STORGE_PATH / "datasets" / dataset_path
 
-    local_dataset_exists = os.path.exists(dataset_full_path)
+    local_dataset_exists = dataset_full_path.exists()
 
     if not local_dataset_exists:
         raise ValueError("Dataset not found!")

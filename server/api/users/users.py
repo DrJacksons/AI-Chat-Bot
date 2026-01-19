@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends
+from typing import Any, Dict
 
 from server.app.controllers import AuthController
 from server.app.controllers.user import UserController
 from server.app.schemas.extras.token import Token
 from server.app.schemas.requests.users import LoginUserRequest, RegisterUserRequest
 from server.app.schemas.responses.users import UserInfo, UserResponse
-from server.core.factory import Factory
+from server.core.factory import Factory, app_logger
 from server.core.fastapi.dependencies.current_user import get_current_user
-from typing import Any, Dict
-from uuid import UUID
 
 user_router = APIRouter()
 
@@ -18,6 +17,7 @@ async def login_user(
     login_user_request: LoginUserRequest,
     auth_controller: AuthController = Depends(Factory().get_auth_controller),
 ) -> Token:
+    app_logger.info(f"Into login interface. Request params: {login_user_request}")
     return await auth_controller.login(
         email=login_user_request.email, password=login_user_request.password
     )
@@ -28,6 +28,7 @@ async def register_user(
     register_user_request: RegisterUserRequest,
     auth_controller: AuthController = Depends(Factory().get_auth_controller),
 ):
+    app_logger.info(f"Into register interface. Request params: {register_user_request}")
     created_user = await auth_controller.register(
         email=register_user_request.email,
         password=register_user_request.password,
@@ -54,4 +55,5 @@ async def update_user_routes(
     user_controller: UserController = Depends(Factory().get_user_controller),
     user: UserInfo = Depends(get_current_user),
 ):
+    app_logger.info(f"Into update user features interface. Request params: {routes}")
     return await user_controller.update_features(user.id, routes)

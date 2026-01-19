@@ -1,6 +1,6 @@
 from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, Body, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from server.core.fastapi.dependencies.authentication import AuthenticationRequired
 from server.app.controllers.department import DepartmentController

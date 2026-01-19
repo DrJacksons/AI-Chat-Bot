@@ -1,4 +1,3 @@
-from typing import Optional, List
 from uuid import UUID
 
 from server.app.models import Department

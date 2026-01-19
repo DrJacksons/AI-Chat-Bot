@@ -1,5 +1,7 @@
 from contextvars import ContextVar, Token
 from typing import Union
+from loguru import logger
+from sqlalchemy import event
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.sql.expression import Delete, Insert, Update
 from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session, create_async_engine
@@ -16,6 +18,20 @@ def set_session_context(session_id: str) -> Token:
 
 def reset_session_context(context: Token) -> None:
     session_context.reset(context)
+
+def setup_sql_logging(engine):
+    """设置SQLAlchemy日志记录。
+
+    Args:
+        engine (AsyncEngine): The SQLAlchemy async engine.
+    """
+    @event.listens_for(engine.sync_engine, "before_cursor_execute")
+    def before_cursor_execute(
+        conn, cursor, statement, parameters, context, executemany
+    ):
+        logger.bind(name="fastapi_app").info(
+            "SQL: {} | params={}", statement, parameters
+        )
 
 # 定义“写”数据库引擎和“读”数据库引擎（读写分离）
 if config.DATABASE_SCHEMA:
@@ -38,6 +54,9 @@ else:
         "writer": create_async_engine(config.DATABASE_URL, pool_recycle=3600, echo=bool(config.SHOW_SQL_ALCHEMY_QUERIES)),
         "reader": create_async_engine(config.DATABASE_URL, pool_recycle=3600, echo=bool(config.SHOW_SQL_ALCHEMY_QUERIES)),
     }
+
+setup_sql_logging(engines["writer"])
+setup_sql_logging(engines["reader"])
 
 class RoutingSession(Session):
     # 查询类操作走只读连接，写入类操作走写连接

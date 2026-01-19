@@ -1,5 +1,6 @@
 import pandas as pd
 import traceback
+import json
 
 from typing import List, Optional, Union, Any
 from agent_core.agent.dataframe_state import AgentState
@@ -9,6 +10,7 @@ from agent_core.sandbox import Sandbox
 from agent_core.prompts import (
     get_chat_prompt_for_sql,
     get_rephrase_query_prompt,
+    get_clarification_questions_prompt,
     get_correct_output_type_error_prompt,
     get_correct_error_prompt_for_sql,
 )
@@ -74,11 +76,41 @@ class DataFrameAgent:
         """
         return await self._process_query(query, output_type)
 
-    def rephrase_query(self, query: str, business_description: Optional[str] = None) -> str:
+    async def rephrase_query(self, query: str, business_description: Optional[str] = None) -> str:
         """Rephrase the query to make it more understandable for the LLM."""
         prompt = get_rephrase_query_prompt(self._state, query, business_description)
-        rephrased_query = self._state.config.llm.chat(prompt)
+        rephrased_query = await self._state.config.llm.call(prompt)
         return rephrased_query
+
+    async def clarification_questions(self) -> List[str]:
+        """
+        Generate clarification questions based on the data and table information
+        
+        Args:
+            query: User's input query that may need clarification
+            
+        Returns:
+            List of up to 3 clarification questions
+        """
+        prompt = get_clarification_questions_prompt(
+            context=self._state
+        )
+
+        self._state.logger.info(f"Clarification Questions Prompt: {prompt}")
+        result = await self._state.config.llm.call(prompt)
+        self._state.logger.info(
+            f"""Clarification Questions Generated: {result}"""
+        )
+        
+        # Clean up the result and parse JSON
+        result = result.replace("```json", "").replace("```", "").strip()
+        try:
+            questions: list[str] = json.loads(result)
+            # Ensure we return exactly 3 questions or fewer
+            return questions
+        except json.JSONDecodeError as e:
+            self._state.logger.error(f"Failed to parse clarification questions JSON: {e}")
+            return []
 
     async def generate_code(self, query: Union[Message, str]) -> str:
         """Generate code using the LLM."""

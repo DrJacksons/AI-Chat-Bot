@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional
 import pandas as pd
 
 from data_inteligence.dataframe.base import DataFrame

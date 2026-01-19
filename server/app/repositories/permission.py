@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from sqlalchemy import select
 
 from server.app.models import Permission

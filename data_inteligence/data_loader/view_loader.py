@@ -13,7 +13,6 @@ from ..query_builders.base_query_builder import BaseQueryBuilder
 from ..query_builders.sql_parser import SQLParser
 from .duck_db_connection_manager import DuckDBConnectionManager
 from .loader import DatasetLoader
-from .local_loader import LocalDatasetLoader
 from .semantic_layer_schema import SemanticLayerSchema, Source
 from .sql_loader import SQLDatasetLoader
 

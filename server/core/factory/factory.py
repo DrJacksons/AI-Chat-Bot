@@ -1,5 +1,4 @@
 from functools import partial
-
 from fastapi import Depends
 
 from server.app.controllers import (
@@ -64,10 +63,11 @@ class Factory:
             space_repository=self.space_repository(db_session=db_session),
             dataset_repository=self.dataset_repository(db_session=db_session),
         )
-
     def get_auth_controller(self, db_session=Depends(get_session)):
         return AuthController(
             user_repository=self.user_repository(db_session=db_session),
+            department_repository=self.department_repository(db_session=db_session),
+            permission_repository=self.permission_repository(db_session=db_session),
         )
 
     def get_chat_controller(self, db_session=Depends(get_session)):

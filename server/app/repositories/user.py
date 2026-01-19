@@ -31,34 +31,6 @@ class UserRepository(BaseRepository[User]):
         return await self._one_or_none(query)
 
     async def get_by_username(
-        self, username: str, join_: set[str] | None = None
-    ) -> User | None:
-        """
-        Get user by username.
-        """
-        query = self._query(join_)
-        query = query.filter(User.username == username)
-        
-        if join_ is not None:
-            return await self._all_unique(query)
-
-        return await self._one_or_none(query)
-        
-    async def get_by_username(
-        self, username: str, join_: set[str] | None = None
-    ) -> User | None:
-        """
-        Get user by username.
-        """
-        query = self._query(join_)
-        query = query.filter(User.username == username)
-
-        if join_ is not None:
-            return await self._all_unique(query)
-
-        return await self._one_or_none(query)    
-        
-    async def get_by_username(
             self, username: str, join_: set[str] | None = None
         ) -> User | None:
             """

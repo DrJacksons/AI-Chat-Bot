@@ -6,9 +6,11 @@
 </business_description>
 {% endif %}
 
+{% if context.memory.count() > 0 %}
 <conversation>
 {{context.memory.get_conversation()}}
 </conversation>
+{% endif %}
 
 <datetime>
 {{ current_time }}

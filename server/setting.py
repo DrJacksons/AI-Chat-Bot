@@ -57,7 +57,7 @@ class Config(BaseConfig):
     JWT_EXPIRE_MINUTES: int = 60 * 24
     EMAIL: str = "admin@wenshuai.com"
     PASSWORD: str = "qwer@123"
-    DEFAULT_SPACE: str = "admin"
+    DEFAULT_SPACE: str = "test"
     # 用户空间下的数据集文件夹容量大小限制
     MAX_DATASET_SIZE: int = 1024 * 1024 * 1024  # 1GB
 

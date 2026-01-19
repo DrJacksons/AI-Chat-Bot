@@ -1,10 +1,9 @@
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 
 from server.app.models import Permission
 from server.app.repositories import PermissionRepository
 from server.app.schemas.requests.permission import CreatePermissionRequest, UpdatePermissionRequest
-from server.app.schemas.responses.permission import PermissionBase
 from server.core.controller import BaseController
 from server.core.database.transactional import Propagation, Transactional
 from server.core.exceptions import BadRequestException, NotFoundException

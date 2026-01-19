@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, Path, status, UploadFile, File, Form
 from typing import Optional
-from loguru import logger
 from server.app.controllers.datasets import DatasetController
 from server.app.schemas.responses.datasets import WorkspaceDatasetsResponseModel, DatasetsDetailsResponseModel
-from server.core.factory import Factory
+from server.core.factory import Factory, app_logger
 from uuid import UUID
 from server.app.schemas.responses import APIResponse
 from server.core.fastapi.dependencies.authentication import AuthenticationRequired
@@ -12,7 +11,6 @@ from server.app.schemas.responses.users import UserInfo
 from server.core.fastapi.dependencies.current_user import get_current_user
 from fastapi.responses import FileResponse
 
-app_logger = logger.bind(name="fastapi_app")
 dataset_router = APIRouter()
 
 @dataset_router.get("/", dependencies=[Depends(AuthenticationRequired)], response_model=WorkspaceDatasetsResponseModel)
@@ -36,6 +34,7 @@ async def create_local_dataset(
         user: UserInfo = Depends(get_current_user),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):
+    app_logger.info(f"Into create local dataset interface. Request params: {name}, {description}, {file.filename}")
     return await datasets_controller.create_local_dataset(file, name, description, user)
 
 
@@ -56,6 +55,7 @@ async def create_database_dataset(
         user: UserInfo = Depends(get_current_user),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):
+    app_logger.info(f"Into create database dataset interface. Request params: {connection}")
     return await datasets_controller.create_database_dataset(connection, user)
 
     
@@ -65,6 +65,7 @@ async def delete_datasets(
         user: UserInfo = Depends(get_current_user),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):
+    app_logger.info(f"Into delete dataset interface. Request params: {dataset_id}")
     return await datasets_controller.delete_datasets(dataset_id, user)
 
 
@@ -90,6 +91,6 @@ async def connect_database(
         connection: DatabaseConnectionRequestModel = Form(...),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ) -> APIResponse[dict]:
-    app_logger.info(f"Connecting to database {connection.database}")
-    tables = await datasets_controller.connect_database(connection, user)
+    app_logger.info(f"Into connect database interface. Request params: {connection}")
+    tables = await datasets_controller.connect_database(connection)
     return APIResponse(data={"tables": tables})

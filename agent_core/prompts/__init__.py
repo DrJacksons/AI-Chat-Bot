@@ -13,6 +13,7 @@ from .correct_output_type_error_prompt import (
 from .base import BasePrompt
 from .generate_python_code_with_sql import GeneratePythonCodeWithSQLPrompt
 from .rephrase_query import RephraseQueryPrompt
+from .clarification_questions_prompt import ClarificationQuestionsPrompt
 
 if TYPE_CHECKING:
     from agent_core.agent.dataframe_state import AgentState
@@ -57,10 +58,19 @@ def get_rephrase_query_prompt(
     )
 
 
+def get_clarification_questions_prompt(
+    context: AgentState
+) -> BasePrompt:
+    return ClarificationQuestionsPrompt(
+        context=context
+    )
+
+
 __all__ = [
     "BasePrompt",
     "CorrectErrorPrompt",
     "GeneratePythonCodePrompt",
     "GeneratePythonCodeWithSQLPrompt",
     "RephraseQueryPrompt",
+    "ClarificationQuestionsPrompt",
 ]

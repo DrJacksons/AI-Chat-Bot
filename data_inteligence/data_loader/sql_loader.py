@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Optional, List
+from typing import Optional
 
 from .loader import DatasetLoader
 from .semantic_layer_schema import SemanticLayerSchema
