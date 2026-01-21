@@ -14,6 +14,7 @@ from .base import BasePrompt
 from .generate_python_code_with_sql import GeneratePythonCodeWithSQLPrompt
 from .rephrase_query import RephraseQueryPrompt
 from .clarification_questions_prompt import ClarificationQuestionsPrompt
+from .generate_dataset_summary import GenerateDatasetSummaryPrompt
 
 if TYPE_CHECKING:
     from agent_core.agent.dataframe_state import AgentState
@@ -73,4 +74,5 @@ __all__ = [
     "GeneratePythonCodeWithSQLPrompt",
     "RephraseQueryPrompt",
     "ClarificationQuestionsPrompt",
+    "GenerateDatasetSummaryPrompt",
 ]

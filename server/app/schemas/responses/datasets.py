@@ -18,8 +18,24 @@ class DatasetModel(BaseModel):
     class Config:
         from_attributes = True
 
+
 class WorkspaceDatasetsResponseModel(BaseModel):
     datasets: List[DatasetModel]
 
+
 class DatasetsDetailsResponseModel(BaseModel):
     dataset: DatasetModel
+
+
+class DatasetBasicModel(BaseModel):
+    id: UUID4
+    name: str
+    table_name: str
+    description: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class WorkspaceDatasetsBasicResponseModel(BaseModel):
+    datasets: List[DatasetBasicModel]

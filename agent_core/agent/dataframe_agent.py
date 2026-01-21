@@ -13,6 +13,7 @@ from agent_core.prompts import (
     get_clarification_questions_prompt,
     get_correct_output_type_error_prompt,
     get_correct_error_prompt_for_sql,
+    GenerateDatasetSummaryPrompt,
 )
 from data_inteligence.dataframe import DataFrame, VirtualDataFrame
 from data_inteligence.code_core.code_generation import CodeGenerator
@@ -35,6 +36,7 @@ class DataFrameAgent:
         config: Optional[Union[Config, dict]] = None,
         memory_size: Optional[int] = 10,
         response_parser: Optional[ResponseParser | Any] = None,
+        system_message: Optional[str] = None,
         sandbox: Optional[Sandbox] = None,
         **kwargs
     ):
@@ -44,7 +46,13 @@ class DataFrameAgent:
             self.dfs = [dfs]
 
         self._state = AgentState()
-        self._state.initialize(dfs, config=config, memory_size=memory_size, description="基于Pandas的数据分析Agent")
+        self._state.initialize(
+            dfs,
+            config=config,
+            memory_size=memory_size,
+            description="基于Pandas的数据分析Agent",
+            system_message=system_message,
+        )
         self._code_generator = CodeGenerator(self._state)
         self._response_parser = response_parser or ResponseParser()
         self._sandbox = sandbox
@@ -53,7 +61,7 @@ class DataFrameAgent:
         """判断是否为pandas的DataFrame"""
         return isinstance(df, DataFrame) and isinstance(df, pd.DataFrame)
 
-    def chat(self, query: str, output_type: Optional[str] = "string"):
+    async def chat(self, query: str, output_type: Optional[str] = "string"):
         """
         处理用户查询，返回分析结果。
 
@@ -64,7 +72,7 @@ class DataFrameAgent:
         self.start_new_conversation()
         if self._state.config.enable_cache:
             self._state.logger.info("Cache enabled.")
-        return self._process_query(query, output_type)
+        return await self._process_query(query, output_type)
 
     async def follow_up(self, query: str, output_type: Optional[str] = "string"):
         """
@@ -229,6 +237,27 @@ class DataFrameAgent:
         开始新的对话，清空历史记录。
         """
         self.clear_memory()
+
+    async def generate_dataset_summary(self):
+        """
+        生成数据集摘要。
+
+        :return: 数据集摘要字符串
+        """
+        if len(self._state.dfs) == 1:
+            dataset = self._state.dfs[0]
+            sample_df = dataset.sample()
+            field_descriptions = dataset.field_descriptions if dataset.field_descriptions else None
+            prompt = GenerateDatasetSummaryPrompt(sample_data=sample_df, field_desc=field_descriptions)
+            self._state.logger.info(f"Generate Dataset Summary Prompt: {prompt}")
+            result = await self._state.config.llm.call(prompt)
+            self._state.logger.info(
+                f"""Generate Dataset Summary Result: {result}"""
+            )
+        else:
+            self._state.logger.info("Multiple datasets, no summary generated.")
+            result = ""
+        return result
 
     async def _process_query(self, query: str, output_type: Optional[str] = "string"):
         """

@@ -52,6 +52,21 @@ class ConversationRepository(BaseRepository[UserConversation]):
         result = await self.session.execute(query)
         return result.scalars().all()
 
+    async def get_cache_message(self, conversation_id: str, query: str):
+        stmt = (
+            select(ConversationMessage)
+            .where(
+                and_(
+                    ConversationMessage.conversation_id == conversation_id,
+                    ConversationMessage.query == query,
+                )
+            )
+            .order_by(desc(ConversationMessage.created_at))
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
     async def get_conversations(
         self, user_id: str, workspace_id: str, skip: int = 0, limit: int = 100
     ) -> List[UserConversation]:

@@ -36,7 +36,7 @@ class RedisConfig(BaseSettings):
 
 class Config(BaseConfig):
     DEBUG: int = 0
-    DEFAULT_LOCALE: str = "en_US"
+    DEFAULT_LOCALE: str = "zh_CN"   # 默认语言环境, zh_CN/en_US
     ENVIRONMENT: str = EnvironmentType.DEVELOPMENT
     DATABASE_URL: str = (
         "postgresql+asyncpg://test:testqwer123@127.0.0.1:5432/chatbot"
@@ -58,6 +58,7 @@ class Config(BaseConfig):
     EMAIL: str = "admin@wenshuai.com"
     PASSWORD: str = "qwer@123"
     DEFAULT_SPACE: str = "test"
+    USE_CACHE: int = 1
     # 用户空间下的数据集文件夹容量大小限制
     MAX_DATASET_SIZE: int = 1024 * 1024 * 1024  # 1GB
 

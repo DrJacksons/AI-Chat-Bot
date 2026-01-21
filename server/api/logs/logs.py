@@ -6,6 +6,7 @@ from server.app.schemas.responses.users import UserInfo
 from server.core.fastapi.dependencies.current_user import get_current_user
 from server.app.schemas.responses.logs import LogsResponseModel
 from server.core.fastapi.dependencies.check_logs_feature import check_logs_feature
+from server.core.fastapi.dependencies.authentication import AuthenticationRequired
 
 log_router = APIRouter()
 
@@ -22,7 +23,7 @@ async def get_logs(
     return await logs_controller.get_logs(user.id, skip, limit)
 
 
-@log_router.get("/{log_id}")
+@log_router.get("/{log_id}", dependencies=[Depends(AuthenticationRequired)])
 async def get_log(
     log_id: UUID = Path(..., description="ID of the log"),
     logs_controller: LogsController = Depends(Factory().get_logs_controller),

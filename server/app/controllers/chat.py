@@ -11,6 +11,7 @@ from data_inteligence.data_loader.sql_loader import SQLDatasetLoader
 from data_inteligence.data_loader.loader import DatasetLoader
 from agent_core.llm.oai import OpenAIChatModel
 
+from server.setting import config as app_config
 from server.app.models import Dataset, User
 from server.app.repositories import UserRepository
 from server.app.repositories.conversation import ConversationRepository
@@ -39,6 +40,12 @@ class ChatController(BaseController[User]):
         self.space_repository = space_repository
         self.conversation_repository = conversation_repository
         self.logs_repository = logs_repository
+        self.llm = OpenAIChatModel(
+            api_key=os.getenv("OPENAI_API_KEY"), 
+            base_url=os.getenv("LLM_BASE_URL", "https://api.openai.com/v1"), 
+            model=os.getenv("LLM_DEFAULT_MODEL", "gpt-4o-mini"),
+            system_message = f"Please make sure to respond in the language: {app_config.DEFAULT_LOCALE}"
+        )
 
     async def get_clarification_questions(self, workspace_id: str) -> List[str]:
         datasets: List[Dataset] = await self.space_repository.get_space_datasets(
@@ -60,10 +67,7 @@ class ChatController(BaseController[User]):
                     df = loader.load()
             connectors.append(df)
 
-        api_key = os.getenv("OPENAI_API_KEY")
-        base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
-        default_model = os.getenv("LLM_DEFAULT_MODEL", "gpt-4o-mini")
-        config = {"llm": OpenAIChatModel(api_key=api_key, base_url=base_url, model=default_model)}
+        config = {"llm": self.llm}
         agent = DataFrameAgent(connectors, config=config)
         result = await agent.clarification_questions()
         return result
@@ -114,21 +118,26 @@ class ChatController(BaseController[User]):
                     df = loader.load()
             connectors.append(df)
 
-        config = {
-            "enable_cache": True,
-        }
-        api_key = os.getenv("OPENAI_API_KEY")
-        base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
-        default_model = os.getenv("LLM_DEFAULT_MODEL", "gpt-4o-mini")
-        config["llm"] = OpenAIChatModel(api_key=api_key, base_url=base_url, model=default_model)
-
+        config = {"llm": self.llm}
         agent = DataFrameAgent(connectors, config=config, response_parser=JsonResponseParser())
         
         if memory:
             agent._state.memory = memory
 
         start_time = time.time()
-        response = await agent.follow_up(chat_request.query)
+        if app_config.USE_CACHE:
+            cache_message = await self.conversation_repository.get_cache_message(conversation_id, chat_request.query)
+            cache_code = cache_message.code_generated if cache_message else None
+            if cache_code:
+                try:
+                    response = agent.execute_code(cache_code)
+                    logger.bind(name="fastapi_app").info(f"cache hit. response: {response}")
+                except Exception:
+                    response = await agent.follow_up(chat_request.query)
+            else:
+                response = await agent.follow_up(chat_request.query)
+        else:
+            response = await agent.follow_up(chat_request.query)
 
         if isinstance(response, str) and (
             response.startswith("抱歉，我无法回答")

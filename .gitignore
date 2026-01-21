@@ -5,6 +5,7 @@
 __pycache__/
 .pytest_cache/
 alembic/
+logs/
 alembic.ini
 stores/
 .env

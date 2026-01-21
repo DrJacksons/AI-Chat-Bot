@@ -2,10 +2,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Path, Query
 
 from server.app.schemas.responses import APIResponse
+from server.core.fastapi.dependencies.authentication import AuthenticationRequired
 from server.app.controllers import ConversationController
 from server.app.schemas.responses.conversation import ConversationList, ConversationMessageList
 from server.app.schemas.responses.users import UserInfo
-from server.core.factory import Factory
+from server.core.factory import Factory, app_logger
 from server.core.fastapi.dependencies.current_user import get_current_user
 from uuid import UUID
 
@@ -29,7 +30,7 @@ async def conversations(
     )
 
 
-@conversation_router.get("/{conv_id}/messages")
+@conversation_router.get("/{conv_id}/messages", dependencies=[Depends(AuthenticationRequired)])
 async def conversation_messages(
     conv_id: UUID = Path(..., description="ID of the conversation"),
     conversation_controller: ConversationController = Depends(
@@ -38,6 +39,7 @@ async def conversation_messages(
     skip: Optional[int] = Query(0, description="Number of items to skip"),
     limit: Optional[int] = Query(10, description="Number of items to retrieve"),
 ) -> APIResponse[ConversationMessageList]:
+    app_logger.info(f"Into conversation_messages interface. Request params: conv_id={conv_id} skip={skip} limit={limit}")
     response = await conversation_controller.get_conversation_messages(
         conv_id, skip, limit
     )
@@ -53,6 +55,7 @@ async def delete_conversation(
     ),
     user: UserInfo = Depends(get_current_user),
 ):
+    app_logger.info(f"Into delete_conversation interface(user={user.id}). Request params: conv_id={conv_id}")
     response = await conversation_controller.archive_conversation(
         conv_id, user.id
     )

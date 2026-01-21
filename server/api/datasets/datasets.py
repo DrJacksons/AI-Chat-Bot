@@ -23,6 +23,7 @@ async def get_dataset(
         dataset_id: UUID = Path(..., description="ID of the dataset"),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):
+    app_logger.info(f"Into get dataset interface. Request params: dataset_id={dataset_id}")
     return await datasets_controller.get_datasets_details(dataset_id)
 
 
@@ -65,7 +66,7 @@ async def delete_datasets(
         user: UserInfo = Depends(get_current_user),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):
-    app_logger.info(f"Into delete dataset interface. Request params: {dataset_id}")
+    app_logger.info(f"Into delete dataset interface(user={user.id}). Request params: dataset_id={dataset_id}")
     return await datasets_controller.delete_datasets(dataset_id, user)
 
 
@@ -75,6 +76,7 @@ async def update_datasets(
         dataset_id: UUID = Path(..., description="ID of the dataset"),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):
+    app_logger.info(f"Into update dataset interface. Request params: dataset_id={dataset_id}, {dataset_update}")
     return await datasets_controller.update_dataset(dataset_id, dataset_update)
 
 
@@ -83,7 +85,18 @@ async def download_dataset(
         dataset_id: UUID = Path(..., description="ID of the dataset"),
         datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
     ):
+    app_logger.info(f"Into download dataset interface. Request params: dataset_id={dataset_id}")
     return await datasets_controller.download_dataset(dataset_id)
+
+
+@dataset_router.get("/summary/{dataset_id}", dependencies=[Depends(AuthenticationRequired)], response_model=APIResponse[dict])
+async def get_dataset_summary(
+        dataset_id: UUID = Path(..., description="ID of the dataset"),
+        datasets_controller: DatasetController = Depends(Factory().get_datasets_controller)
+    ) -> APIResponse[dict]:
+    app_logger.info(f"Into get dataset summary interface. Request params: dataset_id={dataset_id}")
+    summary = await datasets_controller.generate_dataset_summary(dataset_id)
+    return APIResponse(data={"summary": summary})
 
 
 @dataset_router.post("/db/connect", dependencies=[Depends(AuthenticationRequired)], response_model=APIResponse[dict])

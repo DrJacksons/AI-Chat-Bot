@@ -24,6 +24,7 @@ class AgentState:
     last_prompt_id: str = None
     last_prompt_used: str = None
     output_type: Optional[str] = None
+    system_message: Optional[str] = None
 
     def __post_init__(self):
         if isinstance(self.config, dict):
@@ -37,10 +38,11 @@ class AgentState:
         config: Optional[Union[Config, dict]] = None,
         memory_size: Optional[int] = 10,
         description: str = None,
+        system_message: Optional[str] = None,
     ):
-        """Initialize the state with the given parameters."""
         self.dfs = dfs if isinstance(dfs, list) else [dfs]
         self.config = self._get_config(config)
+        self.system_message = system_message
         self.skills = SkillsManager.get_skills()
         if config:
             self.config.llm = self._get_llm(self.config.llm)
@@ -55,7 +57,8 @@ class AgentState:
         return config
 
     def _get_llm(self, llm: Optional[BaseChatModel] = None) -> BaseChatModel:
-        """Load and configure the LLM."""
+        if llm and self.system_message:
+            llm.system_message = self.system_message
         return llm
 
     def assign_prompt_id(self):

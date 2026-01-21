@@ -3,17 +3,18 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from server.core.fastapi.dependencies.authentication import AuthenticationRequired
 from server.app.controllers.permission import PermissionController
 from server.app.schemas.requests.permission import CreatePermissionRequest, UpdatePermissionRequest
 from server.app.schemas.responses.permission import PermissionBase
 from server.app.schemas.responses.users import UserInfo
-from server.core.factory import Factory
+from server.core.factory import Factory, app_logger
 from server.core.fastapi.dependencies.current_user import get_current_user
 
 permission_router = APIRouter()
 
 
-@permission_router.post("/", response_model=PermissionBase, status_code=201)
+@permission_router.post("/", response_model=PermissionBase)
 async def create_permission(
     permisson_request: CreatePermissionRequest,
     permission_controller: PermissionController = Depends(Factory().get_permission_controller),
@@ -24,10 +25,11 @@ async def create_permission(
     """
     if not user.permissions.code == "admin.all":
         raise HTTPException(status_code=403, detail="Only admin user can create permissions")
+    app_logger.info(f"Into create permission interface. Request params: {permisson_request}")
     return await permission_controller.create_permission(permisson_request)
 
 
-@permission_router.get("/", response_model=List[PermissionBase])
+@permission_router.get("/", dependencies=[Depends(AuthenticationRequired)], response_model=List[PermissionBase])
 async def list_permissions(
     permission_controller: PermissionController = Depends(Factory().get_permission_controller),
 ):
@@ -49,6 +51,7 @@ async def update_permission(
     """
     if not user.permissions.code == "admin.all":
         raise HTTPException(status_code=403, detail="Only admin user can update permissions")
+    app_logger.info(f"Into update permission interface. Request params: {permission_id, request}")
     return await permission_controller.update_permission(permission_id, request)
 
 
@@ -63,4 +66,5 @@ async def delete_permission(
     """
     if not user.permissions.code == "admin.all":
         raise HTTPException(status_code=403, detail="Only admin user can delete permissions")
+    app_logger.info(f"Into delete permission interface. Request params: {permission_id}")
     await permission_controller.delete_permission(permission_id)

@@ -5,22 +5,11 @@ from agent_core.prompts.base import BasePrompt
 
 
 class BaseChatModel(ABC):
-    """LLM 聊天模型的基类"""
-
-    def __init__(self, model: str, api_key: str, **kwargs):
-        """
-        初始化 ChatModel 实例。
-
-        Args:
-            model (str): 模型名称。
-            api_key (str): 访问模型 API 所需的密钥。
-            **kwargs: 其他可能需要的配置参数，例如 base_url, organization 等。
-                      这些参数会被存储在 self.config 中供子类使用。
-        """
+    def __init__(self, model: str, api_key: str, system_message: Optional[str] = None, **kwargs):
         self.model = model
         self.api_key = api_key
-        # 将其他配置参数存储起来，供子类实现时使用
         self.config = kwargs
+        self.system_message = system_message
 
     async def chat(
         self,
@@ -50,7 +39,6 @@ class BaseChatModel(ABC):
             - 如果 stream=False 且 functions=None: 返回 str
             - 如果 functions is not None: 返回 Dict[str, Any] (忽略 stream 参数)
         """
-        # 处理输入，统一转换为 messages 列表格式
         if isinstance(prompt_or_messages, str):
             messages = [{"role": "user", "content": prompt_or_messages}]
         elif isinstance(prompt_or_messages, list):
@@ -58,18 +46,17 @@ class BaseChatModel(ABC):
         else:
             raise ValueError("prompt_or_messages must be either a string or a list of message dictionaries.")
 
-        # print(f"Calling chat with messages: {messages}, stream: {stream}, has_functions: {functions is not None}")
-
-        # 处理函数调用参数
+        if self.system_message:
+            if not messages or messages[0].get("role") != "system":
+                messages.insert(0, {"role": "system", "content": self.system_message})
+                
         if functions is not None:
-            # 启用函数调用功能
             return await self._chat_with_functions(
                 messages=messages,
                 functions=functions,
                 function_call=function_call
             )
         else:
-            # 普通聊天功能
             if stream:
                 return self._chat_stream(
                     messages=messages

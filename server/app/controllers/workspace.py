@@ -6,7 +6,7 @@ from server.app.repositories.workspace import WorkspaceRepository
 from server.core.controller import BaseController
 from server.core.database.transactional import Propagation, Transactional
 from server.app.schemas.responses.users import WorkspaceUsersResponse
-from server.app.schemas.responses.datasets import WorkspaceDatasetsResponseModel
+from server.app.schemas.responses.datasets import WorkspaceDatasetsBasicResponseModel
 
 
 class WorkspaceController(BaseController[Workspace]):
@@ -59,7 +59,7 @@ class WorkspaceController(BaseController[Workspace]):
         users = await self.space_repository.get_users_by_workspace_id(workspace_id)
         return WorkspaceUsersResponse(users=users)
     
-    async def get_workspace_datasets(self, workspace_id) -> WorkspaceDatasetsResponseModel:
+    async def get_workspace_datasets(self, workspace_id) -> WorkspaceDatasetsBasicResponseModel:
         await self.get_workspace_by_id(workspace_id)        
         datasets = await self.dataset_repository.get_all_by_workspace_id(workspace_id)
         if not datasets:
@@ -67,7 +67,7 @@ class WorkspaceController(BaseController[Workspace]):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No dataset found. Please restart the server and try again"
             )
-        return WorkspaceDatasetsResponseModel(datasets=datasets)
+        return WorkspaceDatasetsBasicResponseModel(datasets=datasets)
     
     async def get_user_workspaces(self, user):
         result = await self.space_repository.get_user_workspaces(user)

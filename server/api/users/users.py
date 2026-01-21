@@ -17,7 +17,7 @@ async def login_user(
     login_user_request: LoginUserRequest,
     auth_controller: AuthController = Depends(Factory().get_auth_controller),
 ) -> Token:
-    app_logger.info(f"Into login interface. Request params: {login_user_request}")
+    app_logger.info(f"Into login interface. Request params: email={login_user_request.email} password=****")
     return await auth_controller.login(
         email=login_user_request.email, password=login_user_request.password
     )

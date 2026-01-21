@@ -2,8 +2,10 @@ import os
 import shutil
 import traceback
 import json
+from pathlib import Path
 from loguru import logger
 from fastapi import HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import create_engine, inspect, text
 from server.app.models import Dataset, ConnectorType
 from server.app.repositories import DatasetRepository, WorkspaceRepository
@@ -25,8 +27,11 @@ from server.setting import config
 from data_inteligence.constants import DEFAULT_STORGE_PATH, REMOTE_SOURCE_TYPES
 from data_inteligence.helpers.path import calculate_md5
 from data_inteligence.data_loader.semantic_layer_schema import Source, SemanticLayerSchema
-
-from fastapi.responses import FileResponse
+from data_inteligence.data_loader.loader import DatasetLoader
+from data_inteligence.data_loader.sql_loader import SQLDatasetLoader
+from agent_core.agent.dataframe_agent import DataFrameAgent
+from agent_core.llm.oai import OpenAIChatModel
+from data_inteligence.helpers.path import find_project_root
 
 
 app_logger = logger.bind(name="fastapi_app")
@@ -305,3 +310,34 @@ class DatasetController(BaseController[Dataset]):
                 return dataset
 
         return None
+
+    @Transactional(propagation=Propagation.REQUIRED)
+    async def generate_dataset_summary(self, dataset_id: UUID):
+        dataset = self.get_dataset_by_id(dataset_id)
+        config = dataset.connector.config
+        if dataset.connector.type == "CSV":
+            # 读取schema.yaml文件加载Dataframe数据
+            file_path = Path(find_project_root()) / config["file_path"]
+            loader = DatasetLoader.create_loader_from_path(file_path.parent)
+            df = loader.load()
+        elif dataset.connector.type == "DB":
+            if isinstance(config, dict) and "source" in config:
+                schema = SemanticLayerSchema(**config)
+                loader = SQLDatasetLoader(schema, "")
+                df = loader.load()
+    
+        llm = OpenAIChatModel(
+            api_key=os.getenv("OPENAI_API_KEY"), 
+            base_url=os.getenv("LLM_BASE_URL", "https://api.openai.com/v1"), 
+            model=os.getenv("LLM_DEFAULT_MODEL", "gpt-4o-mini"),
+            system_message = f"Please make sure to respond in the language: {app_config.DEFAULT_LOCALE}"
+        )
+        config = {"llm": llm}
+        agent = DataFrameAgent(df, config=config)
+        summary = agent.generate_dataset_summary()
+        if len(dataset.description) < 30:
+            dataset.description = f"{dataset.description}\n{summary}"
+        else:
+            dataset.description = summary
+        await self.dataset_repository.update_dataset(dataset)
+        return dataset.description
