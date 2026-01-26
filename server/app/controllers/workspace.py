@@ -6,7 +6,7 @@ from server.app.repositories.workspace import WorkspaceRepository
 from server.core.controller import BaseController
 from server.core.database.transactional import Propagation, Transactional
 from server.app.schemas.responses.users import WorkspaceUsersResponse
-from server.app.schemas.responses.datasets import WorkspaceDatasetsBasicResponseModel
+from server.app.schemas.responses.datasets import WorkspaceDatasetsBasicResponseModel, WorkspaceDatasetsResponseModel
 
 
 class WorkspaceController(BaseController[Workspace]):

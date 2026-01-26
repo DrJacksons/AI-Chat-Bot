@@ -139,7 +139,7 @@ class BaseChatModel(ABC):
 
     async def call(
         self,
-        prompt: BasePrompt,
+        prompt: BasePrompt | str,
         memory: List[Dict[str, str]] = None,
         stream: bool = False,
     ):
@@ -154,7 +154,10 @@ class BaseChatModel(ABC):
             str: 模型生成的回复
         """
         messages = memory.to_openai_messages() if memory else []
-        messages.append({"role": "user", "content": prompt.to_string()})
+        if isinstance(prompt, str):
+            messages.append({"role": "user", "content": prompt})
+        else:
+            messages.append({"role": "user", "content": prompt.to_string()})
         return await self.chat(
             prompt_or_messages=messages,
             stream=stream,

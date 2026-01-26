@@ -90,6 +90,13 @@ class DataFrameAgent:
         rephrased_query = await self._state.config.llm.call(prompt)
         return rephrased_query
 
+    async def rephrase_query_stream(self, query: str, business_description: Optional[str] = None):
+        """Rephrase the query to make it more understandable for the LLM."""
+        prompt = get_rephrase_query_prompt(self._state, query, business_description)
+        stream_iter = await self._state.config.llm.call(prompt, stream=True)
+        async for chunk in stream_iter:
+            yield chunk
+
     async def clarification_questions(self) -> List[str]:
         """
         Generate clarification questions based on the data and table information

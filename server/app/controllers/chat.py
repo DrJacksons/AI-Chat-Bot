@@ -133,10 +133,8 @@ class ChatController(BaseController[User]):
                     response = agent.execute_code(cache_code)
                     logger.bind(name="fastapi_app").info(f"cache hit. response: {response}")
                 except Exception:
-                    response = await agent.follow_up(chat_request.query)
-            else:
-                response = await agent.follow_up(chat_request.query)
-        else:
+                    logger.bind(name="fastapi_app").error(f"cache hit but failed to execute. query: {chat_request.query}")
+        if not response: 
             response = await agent.follow_up(chat_request.query)
 
         if isinstance(response, str) and (

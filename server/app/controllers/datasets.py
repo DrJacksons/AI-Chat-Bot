@@ -4,6 +4,7 @@ import traceback
 import json
 from pathlib import Path
 from loguru import logger
+from uuid import UUID
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import create_engine, inspect, text
